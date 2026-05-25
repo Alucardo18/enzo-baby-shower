@@ -900,14 +900,14 @@
                 options: q.options 
             });
 
-            // Iniciar Barra de Tiempo (15 Segundos en total)
+            // Iniciar Barra de Tiempo (30 Segundos en total)
             timeLeft = 100;
             const timerBar = document.getElementById('live-timer-bar');
             timerBar.style.width = '100%';
 
             clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                timeLeft -= 0.67; // Tasa de descuento de barra
+                timeLeft -= 0.333; // Tasa de descuento de barra (100 / 300 intervalos = ~0.333 por 100ms)
                 timerBar.style.width = `${Math.max(0, timeLeft)}%`;
 
                 if (timeLeft <= 0) {
