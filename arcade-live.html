@@ -697,22 +697,27 @@
 
                 // 3. Sincronización en la nube real-time (ntfy.sh) para multidispositivo
                 if (this.roomCode) {
-                    const topic = `enzo_arcade_room_${this.roomCode}`;
-                    console.log(`Connecting to Cloud Room: ${topic}`);
-                    this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
-                    this.es.onmessage = (e) => {
-                        try {
-                            const payload = JSON.parse(e.data);
-                            if (payload.event === 'message' && payload.message) {
-                                const data = JSON.parse(payload.message);
-                                if (data._senderId !== this.senderId && this.onmessage) {
-                                    this.onmessage({ data: data });
+                    try {
+                        const topic = `enzo_arcade_room_${this.roomCode}`;
+                        console.log(`Connecting to Cloud Room: ${topic}`);
+                        this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+                        this.es.onmessage = (e) => {
+                            try {
+                                const payload = JSON.parse(e.data);
+                                if (payload.event === 'message' && payload.message) {
+                                    const data = JSON.parse(payload.message);
+                                    if (data._senderId !== this.senderId && this.onmessage) {
+                                        this.onmessage({ data: data });
+                                    }
                                 }
+                            } catch (err) {
+                                console.error("Error parsing cloud message", err);
                             }
-                        } catch (err) {
-                            console.error("Error parsing cloud message", err);
-                        }
-                    };
+                        };
+                    } catch (err) {
+                        console.warn("EventSource is not supported or blocked in this environment (e.g. file://).", err);
+                        this.es = null;
+                    }
                 }
             }
 
@@ -734,13 +739,17 @@
                     localStorage.setItem(this.channelName, JSON.stringify(data));
                 } catch (e) {}
 
-                // Enviar por nube si hay código de sala
-                if (this.roomCode) {
-                    const topic = `enzo_arcade_room_${this.roomCode}`;
-                    fetch(`https://ntfy.sh/${topic}`, {
-                        method: 'POST',
-                        body: JSON.stringify(data)
-                    }).catch(err => console.error("Cloud send error:", err));
+                // Enviar por nube si hay código de sala y la conexión está activa
+                if (this.roomCode && this.es) {
+                    try {
+                        const topic = `enzo_arcade_room_${this.roomCode}`;
+                        fetch(`https://ntfy.sh/${topic}`, {
+                            method: 'POST',
+                            body: JSON.stringify(data)
+                        }).catch(err => console.error("Cloud send error:", err));
+                    } catch (err) {
+                        console.error("Cloud fetch failed:", err);
+                    }
                 }
             }
         }
@@ -764,14 +773,21 @@
         document.querySelector('.qr-sub').innerHTML = `Código de Sala: <strong>${roomCode}</strong>. Ingresen su nickname y preparen su control.`;
 
         // Generar QR dinámico
-        const currentOrigin = (window.location.origin === "null" || !window.location.origin) ? "https://alucardo18.github.io/enzo-baby-shower" : window.location.origin;
-        let pathname = window.location.pathname;
-        if (!pathname.endsWith('/')) {
-            pathname = pathname.substring(0, pathname.lastIndexOf('/'));
+        let controllerUrl = "";
+        if (window.location.protocol === "file:") {
+            // Si se corre localmente como archivo, forzar que el QR apunte a la versión en vivo de producción
+            controllerUrl = `https://alucardo18.github.io/enzo-baby-shower/controlador.html?room=${roomCode}`;
         } else {
-            pathname = pathname.slice(0, -1);
+            // Si está en un servidor (localhost o GitHub Pages), usar la URL actual dinámica
+            const currentOrigin = window.location.origin;
+            let pathname = window.location.pathname;
+            if (!pathname.endsWith('/')) {
+                pathname = pathname.substring(0, pathname.lastIndexOf('/'));
+            } else {
+                pathname = pathname.slice(0, -1);
+            }
+            controllerUrl = `${currentOrigin}${pathname}/controlador.html?room=${roomCode}`;
         }
-        const controllerUrl = `${currentOrigin}${pathname}/controlador.html?room=${roomCode}`;
         document.querySelector('.qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(controllerUrl)}`;
 
         const channel = new SmartChannel('enzo_arcade_channel', roomCode);

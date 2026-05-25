@@ -454,22 +454,27 @@
 
                 // 3. Sincronización en la nube real-time (ntfy.sh) para multidispositivo
                 if (this.roomCode) {
-                    const topic = `enzo_arcade_room_${this.roomCode}`;
-                    console.log(`Connecting to Cloud Room: ${topic}`);
-                    this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
-                    this.es.onmessage = (e) => {
-                        try {
-                            const payload = JSON.parse(e.data);
-                            if (payload.event === 'message' && payload.message) {
-                                const data = JSON.parse(payload.message);
-                                if (data._senderId !== this.senderId && this.onmessage) {
-                                    this.onmessage({ data: data });
+                    try {
+                        const topic = `enzo_arcade_room_${this.roomCode}`;
+                        console.log(`Connecting to Cloud Room: ${topic}`);
+                        this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+                        this.es.onmessage = (e) => {
+                            try {
+                                const payload = JSON.parse(e.data);
+                                if (payload.event === 'message' && payload.message) {
+                                    const data = JSON.parse(payload.message);
+                                    if (data._senderId !== this.senderId && this.onmessage) {
+                                        this.onmessage({ data: data });
+                                    }
                                 }
+                            } catch (err) {
+                                console.error("Error parsing cloud message", err);
                             }
-                        } catch (err) {
-                            console.error("Error parsing cloud message", err);
-                        }
-                    };
+                        };
+                    } catch (err) {
+                        console.warn("EventSource is not supported or blocked in this environment (e.g. file://).", err);
+                        this.es = null;
+                    }
                 }
             }
 
@@ -491,13 +496,17 @@
                     localStorage.setItem(this.channelName, JSON.stringify(data));
                 } catch (e) {}
 
-                // Enviar por nube si hay código de sala
-                if (this.roomCode) {
-                    const topic = `enzo_arcade_room_${this.roomCode}`;
-                    fetch(`https://ntfy.sh/${topic}`, {
-                        method: 'POST',
-                        body: JSON.stringify(data)
-                    }).catch(err => console.error("Cloud send error:", err));
+                // Enviar por nube si hay código de sala y la conexión está activa
+                if (this.roomCode && this.es) {
+                    try {
+                        const topic = `enzo_arcade_room_${this.roomCode}`;
+                        fetch(`https://ntfy.sh/${topic}`, {
+                            method: 'POST',
+                            body: JSON.stringify(data)
+                        }).catch(err => console.error("Cloud send error:", err));
+                    } catch (err) {
+                        console.error("Cloud fetch failed:", err);
+                    }
                 }
             }
         }
