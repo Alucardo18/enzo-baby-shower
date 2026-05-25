@@ -364,10 +364,13 @@
 
     <!-- 🎧 AUDIO DE FX SINTETIZADO ARCADE EN EL CELULAR 🎧 -->
     <script>
-        const ctrlAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let ctrlAudioCtx = null;
         
         function playCtrlBeep(freq, type, duration) {
             try {
+                if (!ctrlAudioCtx) {
+                    ctrlAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
                 if (ctrlAudioCtx.state === 'suspended') {
                     ctrlAudioCtx.resume();
                 }
@@ -416,7 +419,54 @@
 
     <!-- 🕹️ LÓGICA DE COMUNICACIÓN EN VIVO (BROADCASTCHANNEL FALLBACK) 🕹️ -->
     <script>
-        const channel = new BroadcastChannel('enzo_arcade_channel');
+        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE ---
+        class SmartChannel {
+            constructor(channelName) {
+                this.channelName = channelName;
+                this.onmessage = null;
+                this.senderId = Math.random().toString(36).substring(2);
+
+                try {
+                    this.bc = new BroadcastChannel(channelName);
+                    this.bc.onmessage = (e) => {
+                        if (this.onmessage) this.onmessage(e);
+                    };
+                } catch (err) {
+                    console.warn("BroadcastChannel block/not supported. Fallback to localStorage events.");
+                    this.bc = null;
+                }
+
+                // Escuchador de fallback para LocalStorage (Funciona en file://)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === this.channelName && e.newValue) {
+                        try {
+                            const data = JSON.parse(e.newValue);
+                            if (data._senderId !== this.senderId && this.onmessage) {
+                                this.onmessage({ data: data });
+                            }
+                        } catch (err) {
+                            console.error("Error parsing storage message", err);
+                        }
+                    }
+                });
+            }
+
+            postMessage(data) {
+                if (this.bc) {
+                    try {
+                        this.bc.postMessage(data);
+                        return;
+                    } catch (err) {
+                        // Fallback
+                    }
+                }
+                data._senderId = this.senderId;
+                data._timestamp = Date.now();
+                localStorage.setItem(this.channelName, JSON.stringify(data));
+            }
+        }
+
+        const channel = new SmartChannel('enzo_arcade_channel');
         
         let playerNickname = '';
         let currentScore = 0;

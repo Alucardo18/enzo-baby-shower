@@ -546,26 +546,33 @@
 
     <!-- 🎧 AUDIO DE FX SINTETIZADO ARCADE 🎧 -->
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
         
         function playLiveBeep(freq, type, duration) {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = type || 'square';
+                osc.frequency.value = freq || 440;
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio prevents/unsupported in this environment");
             }
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = type || 'square';
-            osc.frequency.value = freq || 440;
-            
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
         }
 
         function soundLevelUp() {
@@ -602,7 +609,7 @@
                     C: "5:00 AM (Para ver el amanecer juntos)",
                     D: "No llorará, Enzo es chill-out desde el vientre 🎧"
                 },
-                correct: "D" // Configurable
+                correct: "D"
             },
             {
                 q: "Si Enzo hereda el gusto musical de sus papás, ¿cuál será su primera reacción al escuchar Daft Punk?",
@@ -656,9 +663,54 @@
             }
         ];
 
-        // --- SISTEMA DE COMUNICACIÓN EN TIEMPO REAL (LOBBY MULTIJUGADOR LOCAL) ---
-        // Usamos BroadcastChannel para intercomunicar las pestañas del navegador instantáneamente sin configurar base de datos aún
-        const channel = new BroadcastChannel('enzo_arcade_channel');
+        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE ---
+        class SmartChannel {
+            constructor(channelName) {
+                this.channelName = channelName;
+                this.onmessage = null;
+                this.senderId = Math.random().toString(36).substring(2);
+
+                try {
+                    this.bc = new BroadcastChannel(channelName);
+                    this.bc.onmessage = (e) => {
+                        if (this.onmessage) this.onmessage(e);
+                    };
+                } catch (err) {
+                    console.warn("BroadcastChannel block/not supported. Fallback to localStorage events.");
+                    this.bc = null;
+                }
+
+                // Escuchador de fallback para LocalStorage (Funciona en file://)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === this.channelName && e.newValue) {
+                        try {
+                            const data = JSON.parse(e.newValue);
+                            if (data._senderId !== this.senderId && this.onmessage) {
+                                this.onmessage({ data: data });
+                            }
+                        } catch (err) {
+                            console.error("Error parsing storage message", err);
+                        }
+                    }
+                });
+            }
+
+            postMessage(data) {
+                if (this.bc) {
+                    try {
+                        this.bc.postMessage(data);
+                        return;
+                    } catch (err) {
+                        // Fallback
+                    }
+                }
+                data._senderId = this.senderId;
+                data._timestamp = Date.now();
+                localStorage.setItem(this.channelName, JSON.stringify(data));
+            }
+        }
+
+        const channel = new SmartChannel('enzo_arcade_channel');
 
         let players = {}; // Formato: { "nickname": { score: 0, answer: null, timeTaken: 0 } }
         let currentLiveStage = 'LOBBY'; // LOBBY, QUESTION, LEADERBOARD, FINAL
