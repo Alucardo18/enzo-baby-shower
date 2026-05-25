@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzo's Live Game Show — Widescreen Host</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Press+Start+2P&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #04040d;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d4edd;
+            --neon-green: #39ff14;
+            --font-arcade: 'Press Start 2P', monospace;
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Outfit', sans-serif;
+            --border-glow: 2px solid rgba(0, 243, 255, 0.3);
+            --shadow-glow: 0 0 20px rgba(0, 243, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: var(--font-body);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.02) 1px, transparent 1px);
+            background-size: 35px 35px;
+        }
+
+        /* Contenedor Widescreen del Salón */
+        .live-container {
+            width: 95vw;
+            height: 90vh;
+            background: #090918;
+            border: 4px solid #1c1c38;
+            border-radius: 24px;
+            box-shadow: 0 0 40px rgba(157, 78, 221, 0.2), inset 0 0 30px rgba(0,0,0,0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Líneas de Escaneo CRT para la Pantalla Gigante */
+        .live-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Marquee Superior */
+        .live-header {
+            background: #03030a;
+            border-bottom: 4px solid #1c1c38;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+        }
+
+        .marquee-title {
+            font-family: var(--font-arcade);
+            font-size: 1.2rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+            letter-spacing: 2px;
+        }
+
+        .marquee-badge {
+            font-family: var(--font-arcade);
+            font-size: 0.7rem;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 6px 14px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* Contenido Central de Pantalla */
+        .live-screen {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==================== 📀 PANTALLA 1: LOBBY DE ESPERA 📀 ==================== */
+        .lobby-view {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            width: 100%;
+            height: 100%;
+            gap: 2rem;
+        }
+
+        .lobby-qr-card {
+            background: rgba(4, 4, 13, 0.8);
+            border: var(--border-glow);
+            border-radius: 20px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .qr-code-img {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            width: 250px;
+            height: 250px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .qr-instruction {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .qr-sub {
+            font-size: 0.9rem;
+            color: #7b7899;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .lobby-players-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .players-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .players-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .players-count {
+            font-family: var(--font-arcade);
+            font-size: 0.8rem;
+            color: var(--neon-green);
+        }
+
+        .players-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: max-content;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .player-tag {
+            background: rgba(157, 78, 221, 0.15);
+            border: 1px solid var(--neon-purple);
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: white;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.1);
+            animation: tagPulse 1.5s infinite alternate;
+        }
+
+        .start-btn-container {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* ==================== 📀 PANTALLA 2: PREGUNTA ACTIVA 📀 ==================== */
+        .question-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+        }
+
+        .question-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-index {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            color: var(--neon-blue);
+            text-shadow: var(--shadow-glow);
+        }
+
+        /* Temporizador Circular o de Barra */
+        .timer-container {
+            width: 250px;
+            background: rgba(255,255,255,0.05);
+            height: 14px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            box-shadow: 0 0 10px var(--neon-pink);
+            transition: width 0.1s linear;
+        }
+
+        .big-question-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
+
+        .big-question-box h1 {
+            font-family: var(--font-heading);
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.35;
+            background: linear-gradient(to right, #fff, #b9b6e3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .options-widescreen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .option-panel {
+            background: rgba(10, 8, 26, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+        .opt-a { border-color: rgba(255, 0, 127, 0.4); }
+        .opt-b { border-color: rgba(0, 243, 255, 0.4); }
+        .opt-c { border-color: rgba(157, 78, 221, 0.4); }
+        .opt-d { border-color: rgba(57, 255, 20, 0.4); }
+
+        .opt-indicator {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .ind-a { background: var(--neon-pink); box-shadow: 0 0 12px var(--neon-pink); }
+        .ind-b { background: var(--neon-blue); box-shadow: 0 0 12px var(--neon-blue); }
+        .ind-c { background: var(--neon-purple); box-shadow: 0 0 12px var(--neon-purple); }
+        .ind-d { background: var(--neon-green); box-shadow: 0 0 12px var(--neon-green); }
+
+        /* Contador de Respuestas Entregadas */
+        .answers-submitted-badge {
+            font-family: var(--font-arcade);
+            font-size: 0.8rem;
+            color: var(--neon-green);
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        /* ==================== 📀 PANTALLA 3: LEADERBOARD / HIGH SCORES 📀 ==================== */
+        .leaderboard-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .leaderboard-title {
+            font-family: var(--font-arcade);
+            font-size: 1.4rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+            margin-bottom: 2rem;
+            animation: blinkText 1.5s infinite alternate;
+        }
+
+        .podium-list {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .podium-row {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        .podium-row.rank-1 {
+            border-color: var(--neon-blue);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .podium-player-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .podium-rank {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            color: #7b7899;
+            width: 40px;
+        }
+
+        .rank-1 .podium-rank { color: var(--neon-blue); text-shadow: var(--shadow-glow); }
+        .rank-2 .podium-rank { color: var(--neon-pink); }
+        .rank-3 .podium-rank { color: var(--neon-purple); }
+
+        .podium-name {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .podium-score {
+            font-family: var(--font-arcade);
+            font-size: 0.95rem;
+            color: var(--neon-green);
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.2);
+        }
+
+        .btn-live-next {
+            font-family: var(--font-arcade);
+            font-size: 0.75rem;
+            background: var(--neon-pink);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,0,127,0.3);
+            transition: all 0.3s;
+        }
+
+        .btn-live-next:hover {
+            background: white;
+            color: black;
+            box-shadow: 0 0 20px white;
+        }
+
+        /* --- ANIMACIONES EXTRA --- */
+        @keyframes tagPulse {
+            from { transform: scale(1); box-shadow: 0 0 10px rgba(157, 78, 221, 0.1); }
+            to { transform: scale(1.03); box-shadow: 0 0 18px rgba(157, 78, 221, 0.3); }
+        }
+
+        @keyframes blinkText {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="live-container">
+        
+        <!-- Marquee de Consola Widescreen -->
+        <div class="live-header">
+            <div class="marquee-title"><i class="fa-solid fa-gamepad"></i> ENZO'S LIVE ARCADE</div>
+            <div id="live-stage" class="marquee-badge">LOBBY P1</div>
+        </div>
+
+        <!-- Pantalla de Proyección -->
+        <div class="live-screen">
+
+            <!-- 📀 SECCIÓN 1: LOBBY DE ESPERA (CÓDIGO QR Y JUGADORES) 📀 -->
+            <div id="lobby-screen" class="lobby-view">
+                
+                <div class="lobby-qr-card">
+                    <!-- Código QR Dinámico apuntando al controlador del usuario en GitHub Pages -->
+                    <img class="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://alucardo18.github.io/enzo-baby-shower/controlador.html" alt="Código QR de Acceso">
+                    <div class="qr-instruction">¡ESCANEEN PARA JUGAR!</div>
+                    <div class="qr-sub">Ingresen su nickname y preparen su control.</div>
+                </div>
+
+                <div class="lobby-players-card">
+                    <div class="players-header">
+                        <h2>JUGADORES EN CABINA</h2>
+                        <div class="players-count" id="player-count-text">0 CONECTADOS</div>
+                    </div>
+                    
+                    <!-- Rejilla donde se agregan en tiempo real los nombres de los invitados -->
+                    <div class="players-grid" id="joined-players-container">
+                        <!-- Nombres dinámicos -->
+                    </div>
+
+                    <div class="start-btn-container">
+                        <button class="btn-live-next" id="btn-start-game-live">
+                            INICIAR BEATS <i class="fa-solid fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 📀 SECCIÓN 2: PREGUNTA ACTIVA CON CUENTA REGRESIVA 📀 -->
+            <div id="question-screen" class="question-view hidden">
+                
+                <div class="question-top-bar">
+                    <div class="question-index" id="live-q-index">STAGE 01 — PREGUNTA 1/6</div>
+                    <div class="timer-container">
+                        <div class="timer-bar" id="live-timer-bar"></div>
+                    </div>
+                </div>
+
+                <div class="big-question-box">
+                    <h1 id="live-q-text">¿Cargando pregunta estelar...?</h1>
+                </div>
+
+                <div class="options-widescreen-grid">
+                    <div class="option-panel opt-a">
+                        <span class="opt-indicator ind-a">A</span>
+                        <span id="opt-a-text">Opción A</span>
+                    </div>
+                    <div class="option-panel opt-b">
+                        <span class="opt-indicator ind-b">B</span>
+                        <span id="opt-b-text">Opción B</span>
+                    </div>
+                    <div class="option-panel opt-c">
+                        <span class="opt-indicator ind-c">C</span>
+                        <span id="opt-c-text">Opción C</span>
+                    </div>
+                    <div class="option-panel opt-d">
+                        <span class="opt-indicator ind-d">D</span>
+                        <span id="opt-d-text">Opción D</span>
+                    </div>
+                </div>
+
+                <div class="answers-submitted-badge" id="answers-count-badge">
+                    ESPERANDO RESPUESTAS: 0 / 0
+                </div>
+
+            </div>
+
+            <!-- 📀 SECCIÓN 3: TABLA DE LÍDERES / HIGH SCORES (HALL OF FAME) 📀 -->
+            <div id="leaderboard-screen" class="leaderboard-view hidden">
+                <div class="leaderboard-title">HALL OF FAME — HIGH SCORES</div>
+
+                <div class="podium-list" id="leaderboard-container">
+                    <!-- Filas dinámicas de posiciones de neón -->
+                </div>
+
+                <div class="start-btn-container">
+                    <button class="btn-live-next" id="btn-next-step">
+                        SIGUIENTE STAGE <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 🎧 AUDIO DE FX SINTETIZADO ARCADE 🎧 -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playLiveBeep(freq, type, duration) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = type || 'square';
+            osc.frequency.value = freq || 440;
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function soundLevelUp() {
+            playLiveBeep(523.25, 'triangle', 0.1);
+            setTimeout(() => playLiveBeep(659.25, 'triangle', 0.1), 100);
+            setTimeout(() => playLiveBeep(783.99, 'triangle', 0.1), 200);
+            setTimeout(() => playLiveBeep(1046.50, 'triangle', 0.3), 300);
+        }
+
+        function soundTick() {
+            playLiveBeep(880, 'sine', 0.03);
+        }
+
+        function soundTimeout() {
+            playLiveBeep(220, 'sawtooth', 0.4);
+        }
+
+        function soundCoinIn() {
+            playLiveBeep(987.77, 'sine', 0.08);
+            setTimeout(() => playLiveBeep(1318.51, 'sine', 0.15), 80);
+        }
+    </script>
+
+    <!-- 🕹️ LÓGICA DE JUEGO MULTIJUGADOR LOCAL (FALLBACK BROADCASTCHANNEL) 🕹️ -->
+    <!-- Este script permite simular a todos los jugadores en la misma laptop abriendo múltiples pestañas -->
+    <script>
+        // --- PREGUNTAS FORMULARIO PLACEHOLDER RETRO-FUTURE ---
+        const LIVE_QUESTIONS = [
+            {
+                q: "¿A qué hora de la madrugada creen que Enzo despertará a los papás con su primer solo de llanto?",
+                options: {
+                    A: "1:00 AM (Apenas durmiéndose)",
+                    B: "3:00 AM (Hora clásica del terror)",
+                    C: "5:00 AM (Para ver el amanecer juntos)",
+                    D: "No llorará, Enzo es chill-out desde el vientre 🎧"
+                },
+                correct: "D" // Configurable
+            },
+            {
+                q: "Si Enzo hereda el gusto musical de sus papás, ¿cuál será su primera reacción al escuchar Daft Punk?",
+                options: {
+                    A: "Empezará a hacer breakdance en la cuna 👾",
+                    B: "Se quedará dormido al ritmo del bombo 💤",
+                    C: "Intentará programar su propio sintetizador 🎹",
+                    D: "Llorará pidiendo reggaetón (¡El horror! 😱)"
+                },
+                correct: "A"
+            },
+            {
+                q: "Le preguntamos a 100 yucatecos: ¿Cuál es el mejor consejo para sobrevivir al primer pañal de Enzo?",
+                options: {
+                    A: "Usar pinzas en la nariz y lentes de seguridad 🥽",
+                    B: "Tener listos los pañuelos y rezar un Ave María 🙏",
+                    C: "Dejarle el trabajo al otro papá en modo cooperativo 🤝",
+                    D: "Hacerlo rápido en menos de 10 segundos como parada de F1 🏎️"
+                },
+                correct: "D"
+            },
+            {
+                q: "¿Qué juguete tecnológico intentará Enzo robarle a papá primero?",
+                options: {
+                    A: "Los audífonos de DJ 🎧",
+                    B: "El control de la consola retro 🎮",
+                    C: "El mouse para programar en la laptop 💻",
+                    D: "El cargador del celular (el juguete definitivo de los bebés) 🔌"
+                },
+                correct: "B"
+            },
+            {
+                q: "Le preguntamos a 100 yucatecos: ¿Qué es lo primero que dirán los abuelos cuando Enzo haga su primer berrinche?",
+                options: {
+                    A: "¡Salió igualito a su papá de travieso!" 👶",
+                    B: "En mi época eso se curaba con un paseo 🚶‍♂️",
+                    C: "Toma tu dulce, mi niño hermoso (Consentidor supremo) 🍭",
+                    D: "Llévenselo, ya empezó a llorar 😂"
+                },
+                correct: "C"
+            },
+            {
+                q: "¿Cuál será la primera palabra real que Enzo pronunciará?",
+                options: {
+                    A: "Papá 👨",
+                    B: "Mamá 👩",
+                    C: "Synth (Sintetizador) 🎹",
+                    D: "Tacos (Yucateco de corazón) 🌮"
+                },
+                correct: "D"
+            }
+        ];
+
+        // --- SISTEMA DE COMUNICACIÓN EN TIEMPO REAL (LOBBY MULTIJUGADOR LOCAL) ---
+        // Usamos BroadcastChannel para intercomunicar las pestañas del navegador instantáneamente sin configurar base de datos aún
+        const channel = new BroadcastChannel('enzo_arcade_channel');
+
+        let players = {}; // Formato: { "nickname": { score: 0, answer: null, timeTaken: 0 } }
+        let currentLiveStage = 'LOBBY'; // LOBBY, QUESTION, LEADERBOARD, FINAL
+        let currentQuestionIndex = 0;
+        let timerInterval = null;
+        let timeLeft = 100;
+        let answersSubmittedThisRound = 0;
+
+        // Escuchar mensajes del celular de los invitados
+        channel.onmessage = (event) => {
+            const data = event.data;
+            
+            if (data.type === 'JOIN_PLAYER') {
+                if (!players[data.nickname]) {
+                    players[data.nickname] = { score: 0, answer: null, timeTaken: 0 };
+                    soundCoinIn();
+                    updateLobbyUI();
+                    // Responder al controlador que se unió con éxito
+                    channel.postMessage({ type: 'JOIN_SUCCESS', nickname: data.nickname });
+                }
+            }
+
+            if (data.type === 'SUBMIT_ANSWER') {
+                if (players[data.nickname] && currentLiveStage === 'QUESTION') {
+                    // Registrar respuesta sólo si no ha contestado
+                    if (players[data.nickname].answer === null) {
+                        players[data.nickname].answer = data.answer;
+                        players[data.nickname].timeTaken = (100 - timeLeft); // Guardar tiempo
+                        
+                        answersSubmittedThisRound++;
+                        soundTick();
+                        updateAnswersBadge();
+
+                        // Verificar si ya respondieron todos
+                        const totalPlayers = Object.keys(players).length;
+                        if (answersSubmittedThisRound >= totalPlayers) {
+                            endQuestionRound();
+                        }
+                    }
+                }
+            }
+        };
+
+        // --- MANEJO DE LOBBY ---
+        function updateLobbyUI() {
+            const container = document.getElementById('joined-players-container');
+            container.innerHTML = '';
+            
+            const playerList = Object.keys(players);
+            document.getElementById('player-count-text').textContent = `${playerList.length} CONECTADOS`;
+
+            playerList.forEach(name => {
+                const tag = document.createElement('div');
+                tag.className = 'player-tag';
+                tag.textContent = name;
+                container.appendChild(tag);
+            });
+        }
+
+        // --- EVENTO INICIAR JUEGO DESDE LA TV (HOST) ---
+        document.getElementById('btn-start-game-live').addEventListener('click', () => {
+            if (Object.keys(players).length === 0) {
+                // Agregar un bot por defecto si el host prueba solo
+                players["Papá Pro 🎧"] = { score: 0, answer: null, timeTaken: 0 };
+                players["Mamá Edit 📸"] = { score: 0, answer: null, timeTaken: 0 };
+                updateLobbyUI();
+            }
+
+            soundLevelUp();
+            startQuestionRound(0);
+        });
+
+        // --- MANEJO DE PREGUNTA ---
+        function startQuestionRound(index) {
+            currentQuestionIndex = index;
+            currentLiveStage = 'QUESTION';
+            answersSubmittedThisRound = 0;
+
+            document.getElementById('live-stage').textContent = `STAGE 0${index + 1}`;
+            
+            // Limpiar respuestas previas
+            Object.keys(players).forEach(name => {
+                players[name].answer = null;
+                players[name].timeTaken = 0;
+            });
+
+            const q = LIVE_QUESTIONS[index];
+            document.getElementById('live-q-index').textContent = `STAGE 0${index + 1} — PREGUNTA ${index + 1}/${LIVE_QUESTIONS.length}`;
+            document.getElementById('live-q-text').textContent = q.q;
+            document.getElementById('opt-a-text').textContent = q.options.A;
+            document.getElementById('opt-b-text').textContent = q.options.B;
+            document.getElementById('opt-c-text').textContent = q.options.C;
+            document.getElementById('opt-d-text').textContent = q.options.D;
+
+            // Mostrar Pantalla de Pregunta
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            document.getElementById('question-screen').classList.remove('hidden');
+
+            updateAnswersBadge();
+
+            // Notificar a los controladores celulares que la pregunta inició
+            channel.postMessage({ 
+                type: 'QUESTION_START', 
+                qIndex: index, 
+                question: q.q,
+                options: q.options 
+            });
+
+            // Iniciar Barra de Tiempo (15 Segundos en total)
+            timeLeft = 100;
+            const timerBar = document.getElementById('live-timer-bar');
+            timerBar.style.width = '100%';
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.67; // Tasa de descuento de barra
+                timerBar.style.width = `${Math.max(0, timeLeft)}%`;
+
+                if (timeLeft <= 0) {
+                    endQuestionRound();
+                }
+            }, 100);
+        }
+
+        function updateAnswersBadge() {
+            const total = Object.keys(players).length;
+            document.getElementById('answers-count-badge').textContent = `RESPUESTAS RECIBIDAS: ${answersSubmittedThisRound} / ${total}`;
+        }
+
+        // --- CIERRE DE PREGUNTA / EVALUAR PUNTAJES ---
+        function endQuestionRound() {
+            clearInterval(timerInterval);
+            soundTimeout();
+            currentLiveStage = 'LEADERBOARD';
+
+            // Evaluar respuestas y otorgar puntajes
+            const q = LIVE_QUESTIONS[currentQuestionIndex];
+            const correctOption = q.correct;
+
+            Object.keys(players).forEach(name => {
+                const p = players[name];
+                if (p.answer === correctOption) {
+                    // 100 puntos base + bono de velocidad (a menor tiempo tardado, más puntos de 0 a 50)
+                    const speedBonus = Math.max(0, Math.floor((100 - p.timeTaken) / 2)); 
+                    p.score += (100 + speedBonus);
+                }
+            });
+
+            // Enviar notificación a los controles del estatus de su respuesta
+            Object.keys(players).forEach(name => {
+                const p = players[name];
+                const isCorrect = (p.answer === correctOption);
+                channel.postMessage({ 
+                    type: 'ROUND_RESULT', 
+                    nickname: name, 
+                    isCorrect: isCorrect, 
+                    score: p.score,
+                    correctAnswer: correctOption
+                });
+            });
+
+            // Renderizar y mostrar Leaderboard
+            renderLeaderboard();
+        }
+
+        // --- MOSTRAR LEADERBOARD ---
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = '';
+
+            // Ordenar jugadores por puntaje de mayor a menor
+            const sortedPlayers = Object.keys(players).map(name => ({
+                name: name,
+                score: players[name].score
+            })).sort((a, b) => b.score - a.score);
+
+            sortedPlayers.slice(0, 5).forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = `podium-row rank-${idx + 1}`;
+                row.innerHTML = `
+                    <div class="podium-player-info">
+                        <span class="podium-rank">#0${idx + 1}</span>
+                        <span class="podium-name">${p.name}</span>
+                    </div>
+                    <span class="podium-score">${p.score} PTS</span>
+                `;
+                container.appendChild(row);
+            });
+
+            // Cambiar vista a Leaderboard
+            document.getElementById('question-screen').classList.add('hidden');
+            document.getElementById('leaderboard-screen').classList.remove('hidden');
+
+            // Ajustar el botón de siguiente stage si es la última pregunta
+            const nextBtn = document.getElementById('btn-next-step');
+            if (currentQuestionIndex + 1 >= LIVE_QUESTIONS.length) {
+                nextBtn.innerHTML = 'VER GANADOR ABSOLUTO <i class="fa-solid fa-crown"></i>';
+            } else {
+                nextBtn.innerHTML = `SIGUIENTE PREGUNTA <i class="fa-solid fa-arrow-right"></i>`;
+            }
+        }
+
+        // --- SIGUIENTE PASO DESDE EL LEADERBOARD ---
+        document.getElementById('btn-next-step').addEventListener('click', () => {
+            soundLevelUp();
+            const nextIndex = currentQuestionIndex + 1;
+            
+            if (nextIndex < LIVE_QUESTIONS.length) {
+                startQuestionRound(nextIndex);
+            } else {
+                // Fin del juego completo
+                showFinalWinner();
+            }
+        });
+
+        // --- PANTALLA GANADOR FINAL ---
+        function showFinalWinner() {
+            currentLiveStage = 'FINAL';
+            document.getElementById('live-stage').textContent = 'GAME COMPLETED';
+
+            const sorted = Object.keys(players).map(name => ({
+                name: name,
+                score: players[name].score
+            })).sort((a, b) => b.score - a.score);
+
+            const winner = sorted[0] || { name: "Nadie", score: 0 };
+
+            const container = document.getElementById('leaderboard-container');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; width:100%;">
+                    <div style="font-size: 5rem; color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue); margin-bottom:1.5rem;">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <h2 style="font-family: var(--font-arcade); font-size: 1.5rem; color: var(--neon-pink); text-shadow: var(--shadow-glow); margin-bottom: 1rem;">
+                        ${winner.name}
+                    </h2>
+                    <p style="font-size: 1.2rem; color: var(--text-secondary);">
+                        Es el Campeón Absoluto con un total de <strong>${winner.score} Puntos</strong>.
+                    </p>
+                </div>
+            `;
+
+            // Notificar a todos los controles que el juego terminó
+            channel.postMessage({ type: 'GAME_OVER', winnerName: winner.name, winnerScore: winner.score });
+
+            // Ajustar botón de TV para reiniciar
+            const nextBtn = document.getElementById('btn-next-step');
+            nextBtn.innerHTML = 'REINICIAR CABINA <i class="fa-solid fa-rotate-left"></i>';
+            nextBtn.onclick = () => {
+                location.reload();
+            };
+        }
+    </script>
+</body>
+</html>

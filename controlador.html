@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enzo's Gamepad — Mobile Player Controller</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Press+Start+2P&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #04040a;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d4edd;
+            --neon-green: #39ff14;
+            --font-arcade: 'Press Start 2P', monospace;
+            --font-body: 'Outfit', sans-serif;
+            --font-heading: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: var(--font-body);
+            overflow: hidden;
+            position: fixed; /* Evita rebote de scroll en iOS */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.01) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Contenedor del Gamepad de Celular */
+        .gamepad-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        /* Header del Gamepad */
+        .gamepad-header {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .header-title {
+            font-family: var(--font-arcade);
+            font-size: 0.5rem;
+            color: var(--neon-pink);
+            letter-spacing: 1px;
+        }
+
+        .header-score {
+            font-family: var(--font-arcade);
+            font-size: 0.55rem;
+            color: var(--neon-green);
+        }
+
+        /* --- PANTALLA CRT DE MENSAJES --- */
+        .phone-display {
+            background: #020205;
+            border: 2px solid #111a30;
+            border-radius: 12px;
+            padding: 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 0 20px rgba(0,0,0,1);
+        }
+
+        .phone-display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+            background-size: 100% 3px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .crt-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 70%, rgba(0, 243, 255, 0.04) 100%);
+            z-index: 9;
+            pointer-events: none;
+        }
+
+        .display-content {
+            text-align: center;
+            z-index: 2;
+            width: 100%;
+        }
+
+        .display-title {
+            font-family: var(--font-arcade);
+            font-size: 0.65rem;
+            color: var(--neon-blue);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+        }
+
+        .display-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==================== 📀 FASE 1: REGISTRO NICKNAME 📀 ==================== */
+        .register-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .retro-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            font-family: var(--font-body);
+            font-weight: 700;
+        }
+
+        .retro-input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .btn-register-submit {
+            font-family: var(--font-arcade);
+            font-size: 0.65rem;
+            background: var(--neon-blue);
+            color: black;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        .btn-register-submit:active {
+            background: white;
+            box-shadow: 0 0 20px white;
+        }
+
+        /* ==================== 📀 FASE 2: ESPERA LOBBY 📀 ==================== */
+        .lobby-spinner {
+            font-size: 2.2rem;
+            color: var(--neon-purple);
+            margin-bottom: 1rem;
+            animation: spin 2s linear infinite;
+        }
+
+        /* ==================== 📀 FASE 3: GAMEPAD DE BOTONES A, B, C, D 📀 ==================== */
+        .gamepad-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            width: 100%;
+        }
+
+        .btn-arcade-control {
+            height: 120px;
+            border-radius: 20px;
+            border: 4px solid rgba(255,255,255,0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.6);
+            transition: all 0.05s ease;
+            touch-action: manipulation; /* Remueve delay de clics en iOS */
+        }
+
+        .btn-arcade-control:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.6);
+        }
+
+        .btn-a-ctrl { background: #b30059; border-color: var(--neon-pink); }
+        .btn-a-ctrl:active { background: var(--neon-pink); box-shadow: 0 0 20px var(--neon-pink); }
+        
+        .btn-b-ctrl { background: #00a3cc; border-color: var(--neon-blue); }
+        .btn-b-ctrl:active { background: var(--neon-blue); box-shadow: 0 0 20px var(--neon-blue); }
+        
+        .btn-c-ctrl { background: #6f2dbd; border-color: var(--neon-purple); }
+        .btn-c-ctrl:active { background: #9d4edd; box-shadow: 0 0 20px #9d4edd; }
+        
+        .btn-d-ctrl { background: #248a07; border-color: var(--neon-green); }
+        .btn-d-ctrl:active { background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); }
+
+        .control-letter {
+            font-family: var(--font-arcade);
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .control-sub {
+            font-size: 0.6rem;
+            font-family: var(--font-arcade);
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Estado deshabilitado una vez presionada una respuesta */
+        .gamepad-controls.disabled .btn-arcade-control {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .gamepad-controls.disabled .btn-arcade-control.selected-btn {
+            opacity: 1;
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.6);
+            border-width: 4px;
+        }
+
+        /* --- MENSAJES DE RESPUESTA --- */
+        .result-header {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        .result-correct { color: var(--neon-green); }
+        .result-incorrect { color: var(--neon-pink); }
+
+        /* Spinner giratorio clásico */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="gamepad-container">
+        
+        <!-- Header del Gamepad -->
+        <div class="gamepad-header">
+            <div class="header-title" id="player-tag">ENZO PLAYER</div>
+            <div class="header-score" id="player-score-text">SCORE: 0000</div>
+        </div>
+
+        <!-- Pantalla CRT del Celular -->
+        <div class="phone-display">
+            <div class="crt-glow"></div>
+            <div class="display-content" id="display-container">
+                
+                <!-- 📀 PANTALLA 1: REGISTRO APODO 📀 -->
+                <div id="disp-register" class="register-box">
+                    <div class="display-title">INGRESE FICHA<br>INSERT NICKNAME</div>
+                    <form id="nickname-form" style="display: flex; flex-direction: column; gap: 12px;">
+                        <input type="text" id="nickname-input" class="retro-input" placeholder="APODO / NICK" required maxlength="12" autocomplete="off">
+                        <button type="submit" class="btn-register-submit">INSERT COIN 👾</button>
+                    </form>
+                </div>
+
+                <!-- 📀 PANTALLA 2: ESPERA LOBBY 📀 -->
+                <div id="disp-waiting" class="hidden">
+                    <div class="lobby-spinner"><i class="fa-solid fa-spinner"></i></div>
+                    <div class="display-title">CONEXIÓN EXITOSA</div>
+                    <div class="display-text">Conectado a la cabina principal. Esperando inicio de la fiesta...</div>
+                </div>
+
+                <!-- 📀 PANTALLA 3: TEXTO DE PREGUNTA CORRIENDO 📀 -->
+                <div id="disp-question" class="hidden">
+                    <div class="display-title" style="color: var(--neon-blue);" id="disp-q-index">STAGE 01</div>
+                    <div class="display-text" id="disp-q-text" style="font-weight: 700; font-size: 0.9rem;">
+                        ¿Pregunta cargada...?
+                    </div>
+                </div>
+
+                <!-- 📀 PANTALLA 4: RESULTADO ROUND 📀 -->
+                <div id="disp-round-result" class="hidden">
+                    <div class="result-header" id="res-status">¡ACIERTO! 🔥</div>
+                    <div class="display-text" id="res-detail">Sigue así, estás en el top.</div>
+                </div>
+
+                <!-- 📀 PANTALLA 5: FIN DEL JUEGO 📀 -->
+                <div id="disp-game-over" class="hidden">
+                    <div class="display-title" style="color: var(--neon-pink);">GAME OVER</div>
+                    <div class="display-text" id="disp-final-ranking">¡Gracias por jugar! Enzo ya te saluda. 🪐</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Panel de Botones del Celular (Se activará dinámicamente) -->
+        <div class="gamepad-controls disabled" id="gamepad-buttons">
+            <button class="btn-arcade-control btn-a-ctrl" onclick="tapArcadeButton('A')">
+                <span class="control-letter">A</span>
+                <span class="control-sub">SELECT</span>
+            </button>
+            <button class="btn-arcade-control btn-b-ctrl" onclick="tapArcadeButton('B')">
+                <span class="control-letter">B</span>
+                <span class="control-sub">SELECT</span>
+            </button>
+            <button class="btn-arcade-control btn-c-ctrl" onclick="tapArcadeButton('C')">
+                <span class="control-letter">C</span>
+                <span class="control-sub">SELECT</span>
+            </button>
+            <button class="btn-arcade-control btn-d-ctrl" onclick="tapArcadeButton('D')">
+                <span class="control-letter">D</span>
+                <span class="control-sub">SELECT</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 🎧 AUDIO DE FX SINTETIZADO ARCADE EN EL CELULAR 🎧 -->
+    <script>
+        const ctrlAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playCtrlBeep(freq, type, duration) {
+            try {
+                if (ctrlAudioCtx.state === 'suspended') {
+                    ctrlAudioCtx.resume();
+                }
+                const osc = ctrlAudioCtx.createOscillator();
+                const gain = ctrlAudioCtx.createGain();
+                
+                osc.type = type || 'sine';
+                osc.frequency.value = freq || 440;
+                
+                gain.gain.setValueAtTime(0.1, ctrlAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctrlAudioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(ctrlAudioCtx.destination);
+                
+                osc.start();
+                osc.stop(ctrlAudioCtx.currentTime + duration);
+            } catch (e) {
+                console.log('Audio blocked or not supported');
+            }
+        }
+
+        function playTap() {
+            playCtrlBeep(880, 'sine', 0.05);
+            // Vibración física de retroalimentación en celulares Android
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        function playResult(correct) {
+            if (correct) {
+                playCtrlBeep(523.25, 'triangle', 0.08);
+                setTimeout(() => playCtrlBeep(659.25, 'triangle', 0.15), 80);
+                if (navigator.vibrate) {
+                    navigator.vibrate([40, 30, 40]);
+                }
+            } else {
+                playCtrlBeep(180, 'sawtooth', 0.25);
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+            }
+        }
+    </script>
+
+    <!-- 🕹️ LÓGICA DE COMUNICACIÓN EN VIVO (BROADCASTCHANNEL FALLBACK) 🕹️ -->
+    <script>
+        const channel = new BroadcastChannel('enzo_arcade_channel');
+        
+        let playerNickname = '';
+        let currentScore = 0;
+        let selectedOption = null;
+
+        // NAVEGACIÓN DE SECCIONES INTERNAS
+        const dispRegister = document.getElementById('disp-register');
+        const dispWaiting = document.getElementById('disp-waiting');
+        const dispQuestion = document.getElementById('disp-question');
+        const dispRoundResult = document.getElementById('disp-round-result');
+        const dispGameOver = document.getElementById('disp-game-over');
+        const gamepadButtons = document.getElementById('gamepad-buttons');
+
+        function showScreen(screenId) {
+            dispRegister.classList.add('hidden');
+            dispWaiting.classList.add('hidden');
+            dispQuestion.classList.add('hidden');
+            dispRoundResult.classList.add('hidden');
+            dispGameOver.classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // --- SUBMIT NICKNAME ---
+        document.getElementById('nickname-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            playerNickname = document.getElementById('nickname-input').value.trim();
+            
+            if (!playerNickname) return;
+            playTap();
+
+            // Notificar al lobby que queremos unirnos
+            channel.postMessage({ type: 'JOIN_PLAYER', nickname: playerNickname });
+            
+            showScreen('disp-waiting');
+            document.getElementById('player-tag').textContent = playerNickname.toUpperCase();
+        });
+
+        // --- MANEJO DE SEÑALES RECIBIDAS DESDE LA TV (HOST) ---
+        channel.onmessage = (event) => {
+            const data = event.data;
+
+            // Confirmación de unión exitosa
+            if (data.type === 'JOIN_SUCCESS' && data.nickname === playerNickname) {
+                showScreen('disp-waiting');
+            }
+
+            // Inicio de Pregunta en TV
+            if (data.type === 'QUESTION_START') {
+                selectedOption = null;
+                
+                // Limpiar botones
+                document.querySelectorAll('.btn-arcade-control').forEach(b => b.classList.remove('selected-btn'));
+                gamepadButtons.classList.remove('disabled');
+
+                document.getElementById('disp-q-index').textContent = `STAGE 0${data.qIndex + 1}`;
+                document.getElementById('disp-q-text').textContent = data.question;
+
+                showScreen('disp-question');
+            }
+
+            // Resultados del Round
+            if (data.type === 'ROUND_RESULT' && data.nickname === playerNickname) {
+                gamepadButtons.classList.add('disabled');
+                
+                const statusEl = document.getElementById('res-status');
+                const detailEl = document.getElementById('res-detail');
+
+                if (data.isCorrect) {
+                    statusEl.textContent = '¡ACIERTO! 🔥';
+                    statusEl.className = 'result-header result-correct';
+                    detailEl.textContent = '¡Bono de velocidad sumado con éxito!';
+                    playResult(true);
+                } else {
+                    statusEl.textContent = '¡OUCH! 👾';
+                    statusEl.className = 'result-header result-incorrect';
+                    detailEl.textContent = `Fallaste. La correcta era la: "${data.correctAnswer}"`;
+                    playResult(false);
+                }
+
+                currentScore = data.score;
+                document.getElementById('player-score-text').textContent = `SCORE: ${String(currentScore).padStart(4, '0')}`;
+
+                showScreen('disp-round-result');
+            }
+
+            // Fin del Juego Completo
+            if (data.type === 'GAME_OVER') {
+                gamepadButtons.classList.add('disabled');
+                
+                const detailEl = document.getElementById('disp-final-ranking');
+                if (data.winnerName === playerNickname) {
+                    detailEl.innerHTML = `🏆 ¡TE LLEVASTE LA CORONA!<br>Eres el campeón absoluto con ${data.winnerScore} PTS.`;
+                    playResult(true);
+                } else {
+                    detailEl.innerHTML = `👾 Fin del juego.<br>El campeón fue <strong>${data.winnerName}</strong>.<br>¡Enzo te manda un saludo intergaláctico!`;
+                }
+
+                showScreen('disp-game-over');
+            }
+        };
+
+        // --- PRESIONAR BOTÓN EN GAMEPAD CELULAR ---
+        function tapArcadeButton(option) {
+            if (gamepadButtons.classList.contains('disabled') || selectedOption !== null) return;
+
+            playTap();
+            selectedOption = option;
+
+            // Iluminar botón seleccionado y congelar controles
+            gamepadButtons.classList.add('disabled');
+            
+            // Asignar clase de seleccionado
+            const btnIdx = { A: 0, B: 1, C: 2, D: 3 }[option];
+            const buttons = document.querySelectorAll('.btn-arcade-control');
+            buttons[btnIdx].classList.add('selected-btn');
+
+            // Enviar respuesta a la TV gigante
+            channel.postMessage({
+                type: 'SUBMIT_ANSWER',
+                nickname: playerNickname,
+                answer: option
+            });
+
+            // Mostrar estatus de envío
+            document.getElementById('disp-q-text').innerHTML = `<span style="color: var(--neon-green)">RESPUESTA "${option}" ENVIADA</span><br><span style="font-size:0.75rem; color:#7b7899">Esperando que termine el tiempo...</span>`;
+        }
+    </script>
+</body>
+</html>
