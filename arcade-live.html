@@ -663,24 +663,25 @@
             }
         ];
 
-        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE ---
+        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE Y CLOUD SYNC ---
         class SmartChannel {
-            constructor(channelName) {
+            constructor(channelName, roomCode = null) {
                 this.channelName = channelName;
                 this.onmessage = null;
                 this.senderId = Math.random().toString(36).substring(2);
+                this.roomCode = roomCode;
 
+                // 1. Canal local (BroadcastChannel)
                 try {
                     this.bc = new BroadcastChannel(channelName);
                     this.bc.onmessage = (e) => {
                         if (this.onmessage) this.onmessage(e);
                     };
                 } catch (err) {
-                    console.warn("BroadcastChannel block/not supported. Fallback to localStorage events.");
                     this.bc = null;
                 }
 
-                // Escuchador de fallback para LocalStorage (Funciona en file://)
+                // 2. Fallback de LocalStorage (mismo dispositivo/pestañas locales)
                 window.addEventListener('storage', (e) => {
                     if (e.key === this.channelName && e.newValue) {
                         try {
@@ -693,24 +694,87 @@
                         }
                     }
                 });
+
+                // 3. Sincronización en la nube real-time (ntfy.sh) para multidispositivo
+                if (this.roomCode) {
+                    const topic = `enzo_arcade_room_${this.roomCode}`;
+                    console.log(`Connecting to Cloud Room: ${topic}`);
+                    this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+                    this.es.onmessage = (e) => {
+                        try {
+                            const payload = JSON.parse(e.data);
+                            if (payload.event === 'message' && payload.message) {
+                                const data = JSON.parse(payload.message);
+                                if (data._senderId !== this.senderId && this.onmessage) {
+                                    this.onmessage({ data: data });
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Error parsing cloud message", err);
+                        }
+                    };
+                }
             }
 
             postMessage(data) {
+                data._senderId = this.senderId;
+                data._timestamp = Date.now();
+
+                // Enviar por canal local
                 if (this.bc) {
                     try {
                         this.bc.postMessage(data);
-                        return;
                     } catch (err) {
-                        // Fallback
+                        // ignore
                     }
                 }
-                data._senderId = this.senderId;
-                data._timestamp = Date.now();
-                localStorage.setItem(this.channelName, JSON.stringify(data));
+
+                // Guardar en localStorage para fallback local
+                try {
+                    localStorage.setItem(this.channelName, JSON.stringify(data));
+                } catch (e) {}
+
+                // Enviar por nube si hay código de sala
+                if (this.roomCode) {
+                    const topic = `enzo_arcade_room_${this.roomCode}`;
+                    fetch(`https://ntfy.sh/${topic}`, {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    }).catch(err => console.error("Cloud send error:", err));
+                }
             }
         }
 
-        const channel = new SmartChannel('enzo_arcade_channel');
+        // --- INICIALIZACIÓN DE LA SALA ---
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        // Colocar el badge de sala en el header
+        const headerContainer = document.querySelector('.live-header');
+        const roomBadge = document.createElement('div');
+        roomBadge.className = 'marquee-badge';
+        roomBadge.style.background = 'rgba(255, 0, 127, 0.1)';
+        roomBadge.style.borderColor = 'var(--neon-pink)';
+        roomBadge.style.color = 'var(--neon-pink)';
+        roomBadge.style.marginRight = '10px';
+        roomBadge.style.marginLeft = 'auto';
+        roomBadge.innerHTML = `<i class="fa-solid fa-tower-broadcast"></i> SALA: ${roomCode}`;
+        headerContainer.insertBefore(roomBadge, document.getElementById('live-stage'));
+
+        // Actualizar la instrucción del QR
+        document.querySelector('.qr-sub').innerHTML = `Código de Sala: <strong>${roomCode}</strong>. Ingresen su nickname y preparen su control.`;
+
+        // Generar QR dinámico
+        const currentOrigin = (window.location.origin === "null" || !window.location.origin) ? "https://alucardo18.github.io/enzo-baby-shower" : window.location.origin;
+        let pathname = window.location.pathname;
+        if (!pathname.endsWith('/')) {
+            pathname = pathname.substring(0, pathname.lastIndexOf('/'));
+        } else {
+            pathname = pathname.slice(0, -1);
+        }
+        const controllerUrl = `${currentOrigin}${pathname}/controlador.html?room=${roomCode}`;
+        document.querySelector('.qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(controllerUrl)}`;
+
+        const channel = new SmartChannel('enzo_arcade_channel', roomCode);
 
         let players = {}; // Formato: { "nickname": { score: 0, answer: null, timeTaken: 0 } }
         let currentLiveStage = 'LOBBY'; // LOBBY, QUESTION, LEADERBOARD, FINAL

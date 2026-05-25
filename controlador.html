@@ -305,6 +305,7 @@
                 <div id="disp-register" class="register-box">
                     <div class="display-title">INGRESE FICHA<br>INSERT NICKNAME</div>
                     <form id="nickname-form" style="display: flex; flex-direction: column; gap: 12px;">
+                        <input type="number" id="room-input" class="retro-input hidden" placeholder="SALA (4 DÍGITOS)" min="1000" max="9999" autocomplete="off">
                         <input type="text" id="nickname-input" class="retro-input" placeholder="APODO / NICK" required maxlength="12" autocomplete="off">
                         <button type="submit" class="btn-register-submit">INSERT COIN 👾</button>
                     </form>
@@ -419,24 +420,25 @@
 
     <!-- 🕹️ LÓGICA DE COMUNICACIÓN EN VIVO (BROADCASTCHANNEL FALLBACK) 🕹️ -->
     <script>
-        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE ---
+        // --- SISTEMA DE COMUNICACIÓN INTELIGENTE CON FALLBACK LOCALSTORAGE Y CLOUD SYNC ---
         class SmartChannel {
-            constructor(channelName) {
+            constructor(channelName, roomCode = null) {
                 this.channelName = channelName;
                 this.onmessage = null;
                 this.senderId = Math.random().toString(36).substring(2);
+                this.roomCode = roomCode;
 
+                // 1. Canal local (BroadcastChannel)
                 try {
                     this.bc = new BroadcastChannel(channelName);
                     this.bc.onmessage = (e) => {
                         if (this.onmessage) this.onmessage(e);
                     };
                 } catch (err) {
-                    console.warn("BroadcastChannel block/not supported. Fallback to localStorage events.");
                     this.bc = null;
                 }
 
-                // Escuchador de fallback para LocalStorage (Funciona en file://)
+                // 2. Fallback de LocalStorage (mismo dispositivo/pestañas locales)
                 window.addEventListener('storage', (e) => {
                     if (e.key === this.channelName && e.newValue) {
                         try {
@@ -449,24 +451,72 @@
                         }
                     }
                 });
+
+                // 3. Sincronización en la nube real-time (ntfy.sh) para multidispositivo
+                if (this.roomCode) {
+                    const topic = `enzo_arcade_room_${this.roomCode}`;
+                    console.log(`Connecting to Cloud Room: ${topic}`);
+                    this.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+                    this.es.onmessage = (e) => {
+                        try {
+                            const payload = JSON.parse(e.data);
+                            if (payload.event === 'message' && payload.message) {
+                                const data = JSON.parse(payload.message);
+                                if (data._senderId !== this.senderId && this.onmessage) {
+                                    this.onmessage({ data: data });
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Error parsing cloud message", err);
+                        }
+                    };
+                }
             }
 
             postMessage(data) {
+                data._senderId = this.senderId;
+                data._timestamp = Date.now();
+
+                // Enviar por canal local
                 if (this.bc) {
                     try {
                         this.bc.postMessage(data);
-                        return;
                     } catch (err) {
-                        // Fallback
+                        // ignore
                     }
                 }
-                data._senderId = this.senderId;
-                data._timestamp = Date.now();
-                localStorage.setItem(this.channelName, JSON.stringify(data));
+
+                // Guardar en localStorage para fallback local
+                try {
+                    localStorage.setItem(this.channelName, JSON.stringify(data));
+                } catch (e) {}
+
+                // Enviar por nube si hay código de sala
+                if (this.roomCode) {
+                    const topic = `enzo_arcade_room_${this.roomCode}`;
+                    fetch(`https://ntfy.sh/${topic}`, {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    }).catch(err => console.error("Cloud send error:", err));
+                }
             }
         }
 
-        const channel = new SmartChannel('enzo_arcade_channel');
+        // Obtener el código de sala desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomCode = urlParams.get('room');
+        
+        const roomInput = document.getElementById('room-input');
+
+        if (!roomCode) {
+            // Mostrar el campo de sala si no viene en la URL
+            roomInput.classList.remove('hidden');
+            roomInput.required = true;
+        } else {
+            document.getElementById('player-tag').textContent = `ENZO ROOM ${roomCode}`;
+        }
+
+        const channel = new SmartChannel('enzo_arcade_channel', roomCode);
         
         let playerNickname = '';
         let currentScore = 0;
@@ -493,9 +543,38 @@
         // --- SUBMIT NICKNAME ---
         document.getElementById('nickname-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            playerNickname = document.getElementById('nickname-input').value.trim();
             
+            if (!roomCode) {
+                roomCode = roomInput.value.trim();
+                if (!roomCode || roomCode.length < 4) {
+                    alert("Por favor ingrese un código de sala de 4 dígitos.");
+                    return;
+                }
+                document.getElementById('player-tag').textContent = `ENZO ROOM ${roomCode}`;
+                
+                // Reinicializar el canal con la sala correcta en la nube
+                channel.roomCode = roomCode;
+                const topic = `enzo_arcade_room_${roomCode}`;
+                console.log(`Connecting manually to Cloud Room: ${topic}`);
+                channel.es = new EventSource(`https://ntfy.sh/${topic}/sse`);
+                channel.es.onmessage = (e) => {
+                    try {
+                        const payload = JSON.parse(e.data);
+                        if (payload.event === 'message' && payload.message) {
+                            const data = JSON.parse(payload.message);
+                            if (data._senderId !== channel.senderId && channel.onmessage) {
+                                channel.onmessage({ data: data });
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Error parsing cloud message", err);
+                    }
+                };
+            }
+            
+            playerNickname = document.getElementById('nickname-input').value.trim();
             if (!playerNickname) return;
+            
             playTap();
 
             // Notificar al lobby que queremos unirnos
