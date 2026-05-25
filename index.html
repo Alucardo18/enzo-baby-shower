@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzo's Baby Celebration — Volume 1</title>
+    <meta name="description" content="Únete a la celebración moderna y retro-futurista por el primer bebé de la familia: Enzo. Música, juegos, amigos y buena vibra.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS Estilos -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ⚡ PANTALLA DE BIENVENIDA / LOCK GATE ⚡ -->
+    <div id="welcome-gate" class="gate-overlay">
+        <div class="gate-content">
+            <div class="glow-logo">
+                <span class="logo-sub">VOLUME 01</span>
+                <h1 class="logo-main">ENZO</h1>
+                <span class="logo-sub">THE NEW ARRIVAL</span>
+            </div>
+            
+            <div class="gate-scanner">
+                <div class="scan-line"></div>
+                <p class="scan-text">PREPARANDO LA FIESTA...</p>
+            </div>
+
+            <button id="btn-enter" class="retro-btn btn-neon-blue">
+                <i class="fa-solid fa-play"></i> INICIAR BEATS & ENTRAR
+            </button>
+            <p class="gate-caption">Enciende tu sonido. Se requiere interacción de audio.</p>
+        </div>
+    </div>
+
+    <!-- 🎵 REPRODUCTOR DE AUDIO FLOTANTE 🎵 -->
+    <div id="vinyl-player" class="player-container hidden">
+        <div class="vinyl-disc" id="vinyl-disc">
+            <div class="vinyl-grooves"></div>
+            <div class="vinyl-center">
+                <div class="vinyl-core"></div>
+            </div>
+        </div>
+        <div class="player-controls">
+            <div class="track-info">
+                <span class="track-title" id="track-name">Ambient Space Synth</span>
+                <span class="track-status" id="track-status">REPRODUCIENDO</span>
+            </div>
+            <button id="btn-play-pause" class="player-btn">
+                <i id="play-pause-icon" class="fa-solid fa-pause"></i>
+            </button>
+        </div>
+        <div class="player-arm" id="player-arm"></div>
+    </div>
+
+    <!-- 🛸 ENTORNO PRINCIPAL 🛸 -->
+    <main id="main-content" class="blur-load">
+        
+        <!-- 🌌 HEADER & HERO SECCIÓN 🌌 -->
+        <header id="hero" class="hero-section">
+            <div class="grid-background"></div>
+            <div class="neon-stars"></div>
+            
+            <div class="hero-content">
+                <div class="badge">BABY CELEBRATION 2026</div>
+                <h1 class="glitch-title" data-text="ENZO'S WARMUP">ENZO'S WARMUP</h1>
+                <p class="subtitle">No es un baby shower tradicional. Es el inicio de una nueva era con amigos.</p>
+                
+                <!-- CUENTA REGRESIVA -->
+                <div class="countdown-container">
+                    <div class="countdown-title">EL CONTEO RETRO-FUTURO</div>
+                    <div class="countdown-grid">
+                        <div class="countdown-box">
+                            <span class="number" id="days">00</span>
+                            <span class="label">DÍAS</span>
+                        </div>
+                        <div class="countdown-box">
+                            <span class="number" id="hours">00</span>
+                            <span class="label">HORAS</span>
+                        </div>
+                        <div class="countdown-box">
+                            <span class="number" id="minutes">00</span>
+                            <span class="label">MINS</span>
+                        </div>
+                        <div class="countdown-box">
+                            <span class="number" id="seconds">00</span>
+                            <span class="label">SEGS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="#rsvp" class="retro-btn btn-neon-pink glow-pulse">
+                    <i class="fa-solid fa-ticket"></i> CONFIRMAR MI PASE
+                </a>
+            </div>
+        </header>
+
+        <!-- 📅 ITINERARIO / AGENDA 📅 -->
+        <section id="agenda" class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">EL PROGRAMA</h2>
+                <p class="section-subtitle">El lineup de nuestra noche de celebración</p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-beam"></div>
+                <div class="timeline-progress"></div>
+
+                <!-- Bloque 1 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content glass-card">
+                        <span class="time-tag">16:00 PM</span>
+                        <h3>WELCOME BEATS & DRINKS</h3>
+                        <p>Aperitivos modernos, mixología especial de bienvenida y los primeros ritmos para ambientar.</p>
+                    </div>
+                </div>
+
+                <!-- Bloque 2 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content glass-card">
+                        <span class="time-tag">17:30 PM</span>
+                        <h3>ENZO'S ROAST & TOAST</h3>
+                        <p>Brindis especial, risas y dinámicas dinámicas e interactivas pensadas para amigos de verdad. ¡Cero juegos aburridos!</p>
+                    </div>
+                </div>
+
+                <!-- Bloque 3 -->
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content glass-card">
+                        <span class="time-tag">19:00 PM</span>
+                        <h3>FOTO & CHILL</h3>
+                        <p>Cena tipo cocktail, cabina de fotos futurista con filtros de luz y convivencia libre con la mejor música.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🕹️ ACCESO AL JUEGO EN VIVO 🕹️ -->
+        <section id="live-game-teaser" class="section-container game-teaser-section">
+            <div class="glass-card game-card-glow">
+                <div class="game-badge"><i class="fa-solid fa-gamepad"></i> RETRO ARCADE</div>
+                <h2>¿QUÉ TAN BIEN CONOCES EL FUTURO?</h2>
+                <p>Durante la celebración en vivo, abriremos nuestra plataforma arcade interactiva para jugar juntos y hacer predicciones locas sobre Enzo. ¡Tendremos premios para los mejores puntajes!</p>
+                <div class="game-btn-container">
+                    <a href="juego.html" target="_blank" class="retro-btn btn-neon-blue">
+                        <i class="fa-solid fa-play"></i> PROBAR JUEGO DEMO
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ✍️ MURO DE BUENOS DESEOS ARRASTRABLE ✍️ -->
+        <section id="wishes-wall" class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">MURO DE BUENOS DESEOS</h2>
+                <p class="section-subtitle">Déjale una cápsula de tiempo o un mensaje divertido a Enzo. ¡Puedes moverlos libremente por la pantalla!</p>
+            </div>
+
+            <!-- Caja de envío -->
+            <div class="glass-card wish-form-card">
+                <form id="wish-form" class="wish-form">
+                    <div class="form-row">
+                        <input type="text" id="wish-author" placeholder="Tu Nombre / Apodo" required autocomplete="off">
+                        <select id="wish-badge">
+                            <option value="🚀">🚀 Viajero Espacial</option>
+                            <option value="👾">👾 Gamer Pro</option>
+                            <option value="🎧">🎧 DJ Master</option>
+                            <option value="⚡">⚡ Energético</option>
+                            <option value="✨">✨ Soñador</option>
+                        </select>
+                    </div>
+                    <textarea id="wish-text" rows="2" placeholder="Escribe un deseo moderno, un consejo gracioso o palabras de amor para Enzo..." required></textarea>
+                    <button type="submit" class="retro-btn btn-neon-cyan">
+                        <i class="fa-solid fa-paper-plane"></i> ENVIAR AL ESPACIO
+                    </button>
+                </form>
+            </div>
+
+            <!-- Contenedor del lienzo flotante -->
+            <div id="wishes-canvas" class="wishes-canvas-container">
+                <div class="canvas-grid-lines"></div>
+                <!-- Las tarjetas de deseos se generarán dinámicamente aquí y serán arrastrables -->
+            </div>
+        </section>
+
+        <!-- 🎟️ CONFIRMACIÓN RSVP 🎟️ -->
+        <section id="rsvp" class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">CONFIRMAR MI BOLETO</h2>
+                <p class="section-subtitle">Asegura tu pase de entrada digital para la celebración exclusiva</p>
+            </div>
+
+            <div class="glass-card rsvp-card">
+                <div class="rsvp-ticket-glow"></div>
+                <form id="rsvp-form" class="rsvp-form">
+                    <div class="form-group">
+                        <label for="rsvp-name">Nombre del Invitado</label>
+                        <input type="text" id="rsvp-name" placeholder="Ej. Carlos y Sofía" required autocomplete="off">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rsvp-status">¿Asistirás a la Fiesta?</label>
+                            <select id="rsvp-status" required>
+                                <option value="si">¡Sí, ahí estaré con todo! 🥂</option>
+                                <option value="no">No puedo, los acompaño de corazón ✨</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="rsvp-guests">Acompañantes</label>
+                            <select id="rsvp-guests">
+                                <option value="0">Solo yo (+0)</option>
+                                <option value="1">Voy con pareja/amigo (+1)</option>
+                                <option value="2">Vamos (+2)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rsvp-message">Nota o felicitación corta (opcional)</label>
+                        <input type="text" id="rsvp-message" placeholder="Ej. ¡Qué emoción! Llevo la buena vibra." autocomplete="off">
+                    </div>
+
+                    <button type="submit" class="retro-btn btn-neon-pink w-100">
+                        <i class="fa-solid fa-circle-check"></i> GENERAR BOLETO Y CONFIRMAR POR WHATSAPP
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 📍 UBICACIÓN / MAPA 📍 -->
+        <section id="location" class="section-container">
+            <div class="section-header">
+                <h2 class="section-title">UBICACIÓN ESPACIAL</h2>
+                <p class="section-subtitle">Las coordenadas para la celebración de Enzo</p>
+            </div>
+
+            <div class="glass-card location-card">
+                <div class="location-info">
+                    <div class="loc-item">
+                        <div class="loc-icon"><i class="fa-solid fa-hotel"></i></div>
+                        <div class="loc-details">
+                            <h4>EL PUNTO DE ENCUENTRO</h4>
+                            <p>Salón / Jardín Terraza Neon Lounge</p>
+                        </div>
+                    </div>
+                    <div class="loc-item">
+                        <div class="loc-icon"><i class="fa-solid fa-map-pin"></i></div>
+                        <div class="loc-details">
+                            <h4>DIRECCIÓN</h4>
+                            <p>Av. de la Innovación 404, San Pedro, CP 66220</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista de Mapa Estilizado Retro -->
+                <div class="styled-map-container">
+                    <div class="map-grid-layer"></div>
+                    <div class="map-marker-glow">
+                        <div class="pulse-ring"></div>
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div class="map-label">TERRAZA NEON LOUNGE</div>
+                    <!-- Nota: Para GitHub Pages, podemos usar un iframe de Google Maps con filtro CSS de inversión/tono oscuro para que encaje perfectamente, o usar botones directos. Haremos ambos. -->
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3596.1158434444983!2d-100.402636284981!3d25.667439983679803!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDQwJzAyLjgiTiAxMDDCsDI0JzAxLjUiVw!5e0!3m2!1ses-419!2smx!4v1653520000000!5m2!1ses-419!2smx" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="dark-map-iframe"></iframe>
+                </div>
+
+                <div class="map-actions">
+                    <a href="https://maps.google.com/?q=Av.+de+la+Innovacion+404,+San+Pedro,+CP+66220" target="_blank" class="map-btn btn-google">
+                        <i class="fa-brands fa-google"></i> Google Maps
+                    </a>
+                    <a href="https://waze.com/ul?q=Av.+de+la+Innovacion+404,+San+Pedro,+CP+66220" target="_blank" class="map-btn btn-waze">
+                        <i class="fa-brands fa-waze"></i> Waze GPS
+                    </a>
+                    <a href="maps://maps.apple.com/?q=Av.+de+la+Innovacion+404,+San+Pedro,+CP+66220" target="_blank" class="map-btn btn-apple">
+                        <i class="fa-brands fa-apple"></i> Apple Maps
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🪐 FOOTER 🪐 -->
+        <footer class="main-footer">
+            <p>Hecho con ⚡ para el primer viaje de Enzo</p>
+            <p class="footer-copy">&copy; 2026 Enzo Baby Celebration. Todos los derechos de diversión reservados.</p>
+        </footer>
+
+    </main>
+
+    <!-- JS Comportamiento -->
+    <script src="app.js"></script>
+</body>
+</html>

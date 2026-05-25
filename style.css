@@ -1,0 +1,1175 @@
+/* ==========================================================================
+   ENZO BABY CELEBRATION - STYLESHEET (RETRO-FUTURE THEME)
+   ========================================================================== */
+
+/* --- 🪐 VARIABLES Y TOKENS DE DISEÑO 🪐 --- */
+:root {
+    --bg-dark: #070714;
+    --bg-card: rgba(15, 12, 38, 0.65);
+    --bg-card-hover: rgba(27, 21, 64, 0.8);
+    
+    /* Neons */
+    --neon-cyan: #00f3ff;
+    --neon-pink: #ff007f;
+    --neon-blue: #0088ff;
+    --neon-purple: #9d4edd;
+    --neon-green: #39ff14;
+    
+    /* Textos */
+    --text-primary: #ffffff;
+    --text-secondary: #b0aebf;
+    --text-muted: #6b6985;
+    
+    /* Glows */
+    --glow-cyan: 0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.2);
+    --glow-pink: 0 0 10px rgba(255, 0, 127, 0.5), 0 0 20px rgba(255, 0, 127, 0.2);
+    --glow-blue: 0 0 10px rgba(0, 136, 255, 0.5), 0 0 20px rgba(0, 136, 255, 0.2);
+    
+    --border-glass: 1px solid rgba(255, 255, 255, 0.08);
+    --border-neon-cyan: 1px solid rgba(0, 243, 255, 0.4);
+    --border-neon-pink: 1px solid rgba(255, 0, 127, 0.4);
+    
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* --- 💫 CONFIGURACIÓN GENERAL 💫 --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Ocultar barra de scroll por defecto o hacerla bonita */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--neon-purple);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-pink);
+}
+
+/* --- ⚡ PANTALLA DE BIENVENIDA (GATE OVERLAY) ⚡ --- */
+.gate-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #140d30 0%, #03030a 100%);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.gate-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.1);
+}
+
+.gate-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+}
+
+.glow-logo {
+    margin-bottom: 3rem;
+}
+
+.logo-main {
+    font-size: 5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, var(--neon-cyan), var(--neon-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.4));
+    letter-spacing: 0.1em;
+    animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+.logo-sub {
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    letter-spacing: 0.4em;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.gate-scanner {
+    position: relative;
+    height: 60px;
+    border: 1px solid rgba(0, 243, 255, 0.15);
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+    animation: scanAnimation 2s linear infinite;
+}
+
+.scan-text {
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--neon-cyan);
+}
+
+.gate-caption {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    letter-spacing: 0.05em;
+}
+
+/* --- 🎵 REPRODUCTOR DE AUDIO FLOTANTE 🎵 --- */
+.player-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(10, 8, 26, 0.85);
+    backdrop-filter: blur(10px);
+    border: var(--border-glass);
+    border-radius: 50px 20px 20px 50px;
+    display: flex;
+    align-items: center;
+    padding: 8px 16px 8px 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 10px rgba(0, 243, 255, 0.1);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-container.hidden {
+    transform: translateY(100px) scale(0.8);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.vinyl-disc {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #111;
+    position: relative;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    transition: transform 0.5s ease;
+}
+
+/* Animación de giro */
+.vinyl-disc.playing {
+    animation: spinDisc 3.5s linear infinite;
+}
+
+.vinyl-grooves {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border-radius: 50%;
+    border: 1px solid #222;
+    background: repeating-radial-gradient(
+        circle,
+        #111,
+        #111 2px,
+        #181818 3px,
+        #111 4px
+    );
+}
+
+.vinyl-center {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.vinyl-core {
+    width: 6px;
+    height: 6px;
+    background: var(--bg-dark);
+    border-radius: 50%;
+}
+
+.player-controls {
+    margin-left: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.track-info {
+    display: flex;
+    flex-direction: column;
+    margin-right: 15px;
+    min-width: 100px;
+}
+
+.track-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.track-status {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--neon-cyan);
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.player-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.player-btn:hover {
+    background: var(--neon-cyan);
+    color: var(--bg-dark);
+    box-shadow: var(--glow-cyan);
+}
+
+.player-arm {
+    position: absolute;
+    top: -12px;
+    left: 45px;
+    width: 25px;
+    height: 30px;
+    border-left: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    border-radius: 0 0 0 5px;
+    transform-origin: top left;
+    transform: rotate(0deg);
+    transition: transform 0.5s ease;
+    pointer-events: none;
+}
+
+.player-container.playing-arm .player-arm {
+    transform: rotate(18deg);
+}
+
+/* --- 🛸 CONTENEDOR PRINCIPAL Y HERO 🛸 --- */
+main {
+    transition: filter 1s ease;
+}
+
+.blur-load {
+    filter: blur(10px);
+}
+
+main:not(.blur-load) {
+    filter: blur(0);
+}
+
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 6rem 2rem 4rem;
+    overflow: hidden;
+}
+
+/* Cuadrícula Retro Perspectiva 3D */
+.grid-background {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center;
+    transform: perspective(300px) rotateX(60deg);
+    transform-origin: bottom center;
+    mask-image: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0));
+    z-index: 1;
+}
+
+.neon-stars {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(white, rgba(255,255,255,0.2) 2px, transparent 40px);
+    background-size: 200px 200px;
+    background-position: 0 0, 40px 60px;
+    opacity: 0.15;
+    z-index: 0;
+}
+
+.hero-content {
+    max-width: 800px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.badge {
+    background: rgba(255, 0, 127, 0.15);
+    border: 1px solid var(--neon-pink);
+    color: var(--neon-pink);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    font-family: var(--font-heading);
+    margin-bottom: 2rem;
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.1);
+}
+
+.glitch-title {
+    font-size: 5.5rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+    position: relative;
+}
+
+/* Efecto glitch simulado */
+.glitch-title::before {
+    content: attr(data-text);
+    position: absolute;
+    left: -2px;
+    text-shadow: 1px 0 var(--neon-pink);
+    top: 0;
+    color: white;
+    background: var(--bg-dark);
+    overflow: hidden;
+    clip: rect(0, 900px, 0, 0); 
+    animation: noise-anim-2 3s infinite linear alternate-reverse;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin-bottom: 3rem;
+}
+
+/* --- 🕰️ CUENTA REGRESIVA ESTILIZADA 🕰️ --- */
+.countdown-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: var(--border-glass);
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 3.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    max-width: 550px;
+    width: 100%;
+}
+
+.countdown-title {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--neon-cyan);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.countdown-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.countdown-box:last-child {
+    border-right: none;
+}
+
+.countdown-box .number {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+    background: linear-gradient(to bottom, #fff 50%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.countdown-box .label {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+/* --- 🖲️ RETRO BOTONES 🖲️ --- */
+.retro-btn {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-neon-blue {
+    background: var(--neon-blue);
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 136, 255, 0.4);
+}
+
+.btn-neon-blue:hover {
+    background: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-3px);
+}
+
+.btn-neon-pink {
+    background: var(--neon-pink);
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+}
+
+.btn-neon-pink:hover {
+    background: #ff3399;
+    box-shadow: var(--glow-pink);
+    transform: translateY(-3px);
+}
+
+.btn-neon-cyan {
+    background: var(--neon-cyan);
+    color: var(--bg-dark);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+}
+
+.btn-neon-cyan:hover {
+    background: #ffffff;
+    box-shadow: 0 0 25px rgba(255,255,255,0.8);
+    transform: translateY(-3px);
+}
+
+.w-100 {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Animación sutil de respiración en botones principales */
+.glow-pulse {
+    animation: btnPulse 2s infinite alternate;
+}
+
+/* --- 🏛️ SECCIONES Y CONTENEDORES 🏛️ --- */
+.section-container {
+    max-width: 900px;
+    margin: 8rem auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #fff, var(--neon-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.05em;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 12px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    width: 50%;
+    height: 2px;
+    background: linear-gradient(to right, var(--neon-cyan), var(--neon-pink));
+    box-shadow: var(--glow-cyan);
+}
+
+.section-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-top: 1rem;
+}
+
+/* --- 💎 GLASS CARDS SYSTEM 💎 --- */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px) saturate(180%);
+    border: var(--border-glass);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    transition: transform 0.4s ease, border 0.4s ease, box-shadow 0.4s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(0, 243, 255, 0.2);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 243, 255, 0.05);
+}
+
+/* --- 📅 LÍNEA DE TIEMPO (AGENDA) 📅 --- */
+.timeline {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Viga central de neón */
+.timeline-beam {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.timeline-progress {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 2px;
+    height: 0; /* Controlado dinámicamente con scroll */
+    background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-pink));
+    box-shadow: var(--glow-cyan);
+    transition: height 0.1s linear;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 4rem;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 11px;
+    top: 30px;
+    width: 20px;
+    height: 20px;
+    background: var(--bg-dark);
+    border: 3px solid var(--text-muted);
+    border-radius: 50%;
+    z-index: 3;
+    transition: all 0.4s ease;
+}
+
+.timeline-item.active .timeline-dot {
+    border-color: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+    background: var(--neon-cyan);
+}
+
+.timeline-content {
+    padding: 1.8rem;
+    position: relative;
+    transform: translateX(20px);
+    opacity: 0.5;
+    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Activación por scroll */
+.timeline-item.active .timeline-content {
+    transform: translateX(0);
+    opacity: 1;
+    border-color: rgba(0, 243, 255, 0.3);
+}
+
+.time-tag {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    letter-spacing: 0.15em;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content h3 {
+    font-size: 1.35rem;
+    margin-bottom: 0.6rem;
+    color: white;
+}
+
+.timeline-content p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* --- 🕹️ LIVE GAME TEASER CARD 🕹️ --- */
+.game-teaser-section {
+    perspective: 1000px;
+}
+
+.game-card-glow {
+    border: var(--border-neon-blue);
+    background: linear-gradient(135deg, rgba(10, 8, 48, 0.8), rgba(27, 10, 60, 0.8));
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transform: rotateX(5deg);
+    box-shadow: 0 20px 50px rgba(0, 136, 255, 0.15);
+}
+
+.game-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    background: rgba(0, 136, 255, 0.15);
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.1em;
+}
+
+.game-card-glow h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.game-card-glow p {
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 2.5rem;
+}
+
+.game-btn-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* --- ✍️ MURO DE DESEOS Y LIENZO FLOTANTE ✍️ --- */
+.wish-form-card {
+    margin-bottom: 3rem;
+    border-color: rgba(0, 243, 255, 0.1);
+}
+
+.wish-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+}
+
+input, select, textarea {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+textarea {
+    resize: none;
+}
+
+/* Lienzo de deseos flotantes */
+.wishes-canvas-container {
+    height: 480px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #04040d;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+    touch-action: none; /* Previene el comportamiento táctil nativo en arrastre */
+}
+
+/* Rejilla de fondo retro cyberpunk */
+.canvas-grid-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+}
+
+/* Tarjetas individuales de deseos flotantes */
+.floating-wish {
+    position: absolute;
+    width: 250px;
+    background: rgba(18, 14, 44, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    cursor: grab;
+    user-select: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.floating-wish:active {
+    cursor: grabbing;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 10px 30px rgba(0, 243, 255, 0.15), 0 0 15px rgba(0, 243, 255, 0.1);
+    z-index: 999;
+}
+
+/* Colores de neón de manera aleatoria a través de clases JS */
+.floating-wish.cyan-glow { border-color: rgba(0, 243, 255, 0.35); box-shadow: 0 5px 15px rgba(0, 243, 255, 0.08); }
+.floating-wish.pink-glow { border-color: rgba(255, 0, 127, 0.35); box-shadow: 0 5px 15px rgba(255, 0, 127, 0.08); }
+.floating-wish.purple-glow { border-color: rgba(157, 78, 221, 0.35); box-shadow: 0 5px 15px rgba(157, 78, 221, 0.08); }
+
+.wish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.wish-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+}
+
+.wish-icon {
+    font-size: 1rem;
+}
+
+.wish-body {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* --- 🎟️ BOLETO / RSVP CARD 🎟️ --- */
+.rsvp-card {
+    position: relative;
+    overflow: hidden;
+    border: var(--border-neon-pink);
+    box-shadow: 0 20px 40px rgba(255, 0, 127, 0.1);
+}
+
+.rsvp-ticket-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255, 0, 127, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.rsvp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--neon-pink);
+    font-weight: 700;
+}
+
+.rsvp-form .form-row {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* --- 📍 COORDENADAS / MAPA 📍 --- */
+.location-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.location-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.loc-item {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+}
+
+.loc-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.25rem;
+    box-shadow: var(--glow-cyan);
+}
+
+.loc-details h4 {
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.loc-details p {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.styled-map-container {
+    height: 250px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    border: var(--border-glass);
+}
+
+/* Efecto oscuro para mapa */
+.dark-map-iframe {
+    filter: invert(90%) hue-rotate(180deg) contrast(110%) saturate(110%);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Superposición de rejilla futurista flotando sobre el mapa */
+.map-grid-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(rgba(0, 243, 255, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: 2;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+.map-marker-glow {
+    position: absolute;
+    top: calc(50% - 20px);
+    left: calc(50% - 20px);
+    z-index: 3;
+    color: var(--neon-pink);
+    font-size: 2.2rem;
+    pointer-events: none;
+    filter: drop-shadow(0 0 10px var(--neon-pink));
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--neon-pink);
+    border-radius: 50%;
+    animation: ringPulse 1.8s ease-out infinite;
+}
+
+.map-label {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 3;
+    background: rgba(7, 7, 20, 0.85);
+    border: 1px solid var(--neon-cyan);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--neon-cyan);
+}
+
+.map-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.map-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: 8px;
+    color: white;
+    background: rgba(255,255,255,0.05);
+    border: var(--border-glass);
+    transition: all 0.3s ease;
+}
+
+.map-btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-google:hover { background: #ea4335; border-color: #ea4335; box-shadow: 0 0 15px rgba(234, 67, 53, 0.4); }
+.btn-waze:hover { background: #33ccff; border-color: #33ccff; box-shadow: 0 0 15px rgba(51, 204, 255, 0.4); }
+.btn-apple:hover { background: #ffffff; color: black; border-color: white; box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); }
+
+/* --- 🪐 FOOTER 🪐 --- */
+.main-footer {
+    text-align: center;
+    padding: 4rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.main-footer p {
+    margin-bottom: 0.5rem;
+}
+
+.footer-copy {
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   🎬 ANIMACIONES Y MEDIA QUERIES 🎬
+   ========================================================================== */
+
+@keyframes pulseGlow {
+    from {
+        filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.3));
+    }
+    to {
+        filter: drop-shadow(0 0 25px rgba(0, 243, 255, 0.6)) drop-shadow(0 0 10px rgba(255,0,127,0.3));
+    }
+}
+
+@keyframes scanAnimation {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+}
+
+@keyframes spinDisc {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes btnPulse {
+    from { transform: scale(1); box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); }
+    to { transform: scale(1.03); box-shadow: 0 0 25px rgba(255, 0, 127, 0.65), 0 0 10px rgba(0, 243, 255, 0.2); }
+}
+
+@keyframes ringPulse {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Animaciones del Glitch */
+@keyframes noise-anim-2 {
+    0% { clip: rect(76px, 9999px, 116px, 0); }
+    5% { clip: rect(13px, 9999px, 115px, 0); }
+    10% { clip: rect(102px, 9999px, 123px, 0); }
+    15% { clip: rect(80px, 9999px, 92px, 0); }
+    20% { clip: rect(51px, 9999px, 60px, 0); }
+    25% { clip: rect(117px, 9999px, 131px, 0); }
+    30% { clip: rect(98px, 9999px, 105px, 0); }
+    35% { clip: rect(20px, 9999px, 35px, 0); }
+    40% { clip: rect(125px, 9999px, 134px, 0); }
+    45% { clip: rect(72px, 9999px, 83px, 0); }
+    50% { clip: rect(14px, 9999px, 25px, 0); }
+    55% { clip: rect(111px, 9999px, 120px, 0); }
+    60% { clip: rect(44px, 9999px, 50px, 0); }
+    65% { clip: rect(90px, 9999px, 98px, 0); }
+    70% { clip: rect(61px, 9999px, 70px, 0); }
+    75% { clip: rect(123px, 9999px, 130px, 0); }
+    80% { clip: rect(32px, 9999px, 45px, 0); }
+    85% { clip: rect(104px, 9999px, 110px, 0); }
+    90% { clip: rect(5px, 9999px, 15px, 0); }
+    95% { clip: rect(87px, 9999px, 95px, 0); }
+    100% { clip: rect(121px, 9999px, 130px, 0); }
+}
+
+/* RESPONSIVE LAYOUTS */
+@media (max-width: 768px) {
+    .logo-main {
+        font-size: 3.5rem;
+    }
+    
+    .glitch-title {
+        font-size: 3.2rem;
+    }
+    
+    .subtitle {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .countdown-grid {
+        gap: 0.5rem;
+    }
+    
+    .countdown-box .number {
+        font-size: 1.6rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .wishes-canvas-container {
+        height: 380px;
+    }
+    
+    .location-info {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .map-actions {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+    
+    .timeline-item {
+        padding-left: 45px;
+    }
+    
+    .timeline-dot {
+        left: 12px;
+    }
+    
+    .timeline-beam, .timeline-progress {
+        left: 21px;
+    }
+}

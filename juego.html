@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzo's Arcade — Live Event Game</title>
+    <meta name="description" content="Predicciones interactivas y trivia en vivo para el Baby Shower de Enzo.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- ESTILOS ARCADE --- */
+        :root {
+            --bg-dark: #050510;
+            --arcade-green: #39ff14;
+            --arcade-pink: #ff007f;
+            --arcade-blue: #00f3ff;
+            --text-color: #ffffff;
+            --font-arcade: 'Press Start 2P', monospace;
+            --font-body: 'Outfit', sans-serif;
+            --glow-green: 0 0 10px rgba(57, 255, 20, 0.6), 0 0 20px rgba(57, 255, 20, 0.2);
+            --glow-pink: 0 0 10px rgba(255, 0, 127, 0.6), 0 0 20px rgba(255, 0, 127, 0.2);
+            --glow-blue: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 25px 25px;
+            padding: 2rem 1rem;
+        }
+
+        /* Cabina de Arcade */
+        .arcade-cabinet {
+            width: 100%;
+            max-width: 600px;
+            background: #0d0d1e;
+            border: 4px solid #1c1c3a;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.15), 0 20px 50px rgba(0,0,0,0.8);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Luces de Neón perimetrales */
+        .arcade-cabinet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--arcade-blue), var(--arcade-pink), var(--arcade-green));
+        }
+
+        .arcade-header {
+            background: #070710;
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 4px solid #1c1c3a;
+            position: relative;
+        }
+
+        .arcade-marquee {
+            font-family: var(--font-arcade);
+            font-size: 1.1rem;
+            color: var(--arcade-pink);
+            text-shadow: var(--glow-pink);
+            letter-spacing: 2px;
+            animation: flicker 2s infinite alternate;
+        }
+
+        .arcade-sub {
+            font-size: 0.75rem;
+            color: var(--arcade-blue);
+            margin-top: 0.5rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* Pantalla CRT */
+        .arcade-screen-bezel {
+            padding: 1.5rem;
+            background: #020205;
+        }
+
+        .arcade-screen {
+            background: #040810;
+            border: 3px solid #111a30;
+            border-radius: 10px;
+            min-height: 380px;
+            position: relative;
+            overflow: hidden;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 30px rgba(0,0,0,1);
+        }
+
+        /* Rayas del monitor retro */
+        .arcade-screen::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Destellos y brillo de pantalla CRT */
+        .crt-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 60%, rgba(0, 243, 255, 0.05) 100%);
+            z-index: 9;
+            pointer-events: none;
+        }
+
+        /* Controles de Consola */
+        .arcade-panel {
+            background: #0d0d1e;
+            border-top: 4px solid #1c1c3a;
+            padding: 1.2rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .joystick-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .joystick-base {
+            width: 50px;
+            height: 50px;
+            background: #222;
+            border-radius: 50%;
+            position: relative;
+            border: 3px solid #444;
+        }
+
+        .joystick-stick {
+            width: 16px;
+            height: 16px;
+            background: var(--arcade-pink);
+            border-radius: 50%;
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            box-shadow: var(--glow-pink);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1.2rem;
+        }
+
+        .btn-arcade {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+        }
+
+        .btn-arcade:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.5);
+        }
+
+        .btn-green { background: #1b8a07; border-color: var(--arcade-green); }
+        .btn-green:active { background: var(--arcade-green); box-shadow: var(--glow-green); }
+        .btn-blue { background: #006699; border-color: var(--arcade-blue); }
+        .btn-blue:active { background: var(--arcade-blue); box-shadow: var(--glow-blue); }
+
+        .panel-label {
+            font-size: 0.6rem;
+            font-family: var(--font-arcade);
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* --- LOGICA DE PANTALLAS DEL JUEGO --- */
+        .game-screen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Intro Screen */
+        .intro-title {
+            font-family: var(--font-arcade);
+            font-size: 0.85rem;
+            color: var(--arcade-blue);
+            line-height: 1.8;
+            text-align: center;
+            margin-top: 1.5rem;
+            text-shadow: var(--glow-blue);
+        }
+
+        .intro-instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 2rem 0;
+            line-height: 1.5;
+        }
+
+        .arcade-ready-btn {
+            font-family: var(--font-arcade);
+            font-size: 0.75rem;
+            background: var(--arcade-green);
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            box-shadow: var(--glow-green);
+            transition: all 0.3s ease;
+        }
+
+        .arcade-ready-btn:hover {
+            transform: scale(1.05);
+            background: white;
+            box-shadow: 0 0 20px white;
+        }
+
+        /* Trivia Screen */
+        .progress-indicator {
+            font-family: var(--font-arcade);
+            font-size: 0.55rem;
+            color: var(--arcade-blue);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            background: rgba(0, 243, 255, 0.08);
+            border-color: var(--arcade-blue);
+        }
+
+        .option-card.selected {
+            background: rgba(255, 0, 127, 0.15);
+            border-color: var(--arcade-pink);
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.15);
+        }
+
+        .option-marker {
+            font-family: var(--font-arcade);
+            font-size: 0.65rem;
+            color: var(--arcade-pink);
+            border: 1px solid var(--arcade-pink);
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .next-btn-container {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Predictions Form Screen */
+        .prediction-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            height: 100%;
+        }
+
+        .pred-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .pred-input-group label {
+            font-family: var(--font-arcade);
+            font-size: 0.55rem;
+            color: var(--arcade-blue);
+            text-transform: uppercase;
+        }
+
+        .pred-input-group input, .pred-input-group select {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+        }
+
+        .pred-input-group input:focus {
+            outline: none;
+            border-color: var(--arcade-blue);
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Score / Ticket Screen */
+        .ticket-box {
+            background: rgba(18, 14, 44, 0.85);
+            border: 2px dashed var(--arcade-pink);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.1);
+            position: relative;
+        }
+
+        .ticket-title {
+            font-family: var(--font-arcade);
+            font-size: 0.65rem;
+            color: var(--arcade-pink);
+            margin-bottom: 1.2rem;
+        }
+
+        .score-value {
+            font-family: var(--font-arcade);
+            font-size: 1.8rem;
+            color: var(--arcade-green);
+            text-shadow: var(--glow-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .prediction-summary {
+            text-align: left;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .prediction-summary strong {
+            color: white;
+        }
+
+        .home-btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* --- ANIMACIONES EXTRA --- */
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow: 0 0 10px rgba(255, 0, 127, 0.6), 0 0 20px rgba(255, 0, 127, 0.2);
+                color: var(--arcade-pink);
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+                color: #55002b;
+            }
+        }
+
+        /* --- FOOTER REGRESO --- */
+        .back-nav {
+            margin-top: 2rem;
+        }
+
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--arcade-blue);
+            text-shadow: var(--glow-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🕹️ CABINA DE ARCADE INTERACTIVA 🕹️ -->
+    <div class="arcade-cabinet">
+        
+        <!-- Marquee / Letrero Superior -->
+        <div class="arcade-header">
+            <div class="arcade-marquee">ENZO ARCADE</div>
+            <div class="arcade-sub">Volume 01: The Warmup</div>
+        </div>
+
+        <!-- Pantalla CRT -->
+        <div class="arcade-screen-bezel">
+            <div class="arcade-screen">
+                <div class="crt-glow"></div>
+
+                <!-- 📀 PANTALLA 1: BIENVENIDA 📀 -->
+                <div id="screen-intro" class="game-screen">
+                    <div class="intro-title">
+                        INSERT COIN<br>
+                        TO START PLAYING!
+                    </div>
+
+                    <div class="intro-instructions">
+                        Pon a prueba tus habilidades predictivas. Primero responderás 4 preguntas rápidas sobre el festejo y luego harás tu boleto de predicciones sobre la llegada de Enzo.
+                    </div>
+
+                    <button class="arcade-ready-btn" id="btn-start-game">
+                        <i class="fa-solid fa-gamepad"></i> START GAME
+                    </button>
+                </div>
+
+                <!-- 📀 PANTALLA 2: TRIVIA / PREGUNTAS 📀 -->
+                <div id="screen-trivia" class="game-screen hidden">
+                    <div>
+                        <div class="progress-indicator">
+                            <span id="question-number">PREGUNTA 1/4</span>
+                            <span id="score-indicator">SCORE: 0000</span>
+                        </div>
+                        <div class="question-text" id="q-text">
+                            ¿A quién de los papás creen que se le olvidará cambiar el primer pañal de Enzo?
+                        </div>
+                    </div>
+
+                    <div class="options-grid" id="q-options">
+                        <!-- Las opciones se inyectarán dinámicamente -->
+                        <div class="option-card" onclick="selectOption(0)">
+                            <span class="option-marker">A</span>
+                            <span>Mamá (¡Ella está muy lista!)</span>
+                        </div>
+                        <div class="option-card" onclick="selectOption(1)">
+                            <span class="option-marker">B</span>
+                            <span>Papá (Se va a distraer con la música)</span>
+                        </div>
+                    </div>
+
+                    <div class="next-btn-container">
+                        <button class="arcade-ready-btn" id="btn-next-question">
+                            SIGUIENTE <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 📀 PANTALLA 3: FORMULARIO PREDICCIONES 📀 -->
+                <div id="screen-predictions" class="game-screen hidden">
+                    <div>
+                        <div class="progress-indicator">
+                            <span>ARCADE PREDICTIONS</span>
+                            <span>STAGE 2</span>
+                        </div>
+                        <h3 class="question-text" style="font-size: 1.1rem; margin-bottom: 1rem;">
+                            ¡REDACTA EL FUTURO DE ENZO!
+                        </h3>
+                    </div>
+
+                    <form id="predictions-form" class="prediction-form">
+                        <div class="pred-input-group">
+                            <label>Tu Nombre / Firma</label>
+                            <input type="text" id="pred-author" placeholder="Ej. Tía Paty" required autocomplete="off">
+                        </div>
+
+                        <div class="pred-input-group">
+                            <label>¿Qué fecha crees que nacerá Enzo?</label>
+                            <input type="date" id="pred-date" required>
+                        </div>
+
+                        <div class="pred-input-group">
+                            <label>¿A quién se parecerá más?</label>
+                            <select id="pred-resemblance" required>
+                                <option value="Mamá">Mamá 👩</option>
+                                <option value="Papá">Papá 👨</option>
+                                <option value="Un mix perfecto">Un mix de ambos ⚡</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="arcade-ready-btn" style="margin-top: 1rem;">
+                            GENERAR MI BOLETO <i class="fa-solid fa-ticket"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 📀 PANTALLA 4: RESULTADO Y BOLETO FINAL 📀 -->
+                <div id="screen-results" class="game-screen hidden">
+                    <div>
+                        <div class="progress-indicator">
+                            <span>TICKET EMITIDO</span>
+                            <span>STAGE COMPLETED</span>
+                        </div>
+                    </div>
+
+                    <div class="ticket-box">
+                        <div class="ticket-title">ENZO'S FUTURISTIC TICKET</div>
+                        <div class="score-value" id="final-score">0800 PTS</div>
+                        <div class="score-desc" id="score-ranking">RANKING: GAMER PRO 👾</div>
+
+                        <div class="prediction-summary" id="prediction-summary-text">
+                            El boleto del viajero del tiempo **Tía Paty** predice que Enzo nacerá el **15 de Julio de 2026** y tendrá **un mix perfecto** de rasgos de sus papás.
+                        </div>
+                    </div>
+
+                    <div class="home-btn-container">
+                        <button class="arcade-ready-btn" id="btn-share-whatsapp" style="background: var(--arcade-pink); box-shadow: var(--glow-pink);">
+                            <i class="fa-brands fa-whatsapp"></i> ENVIAR A PAPÁS
+                        </button>
+                        <button class="arcade-ready-btn" id="btn-restart" style="background: var(--arcade-blue); box-shadow: var(--glow-blue);">
+                            <i class="fa-solid fa-rotate-left"></i> OTRA VEZ
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Panel de Control del Cabinet -->
+        <div class="arcade-panel">
+            <div class="joystick-container">
+                <div class="joystick-base">
+                    <div class="joystick-stick" id="stick"></div>
+                </div>
+                <span class="panel-label">JOYSTICK</span>
+            </div>
+            
+            <div class="action-buttons">
+                <div>
+                    <button class="btn-arcade btn-green" id="arcade-btn-a"></button>
+                    <div class="panel-label">A</div>
+                </div>
+                <div>
+                    <button class="btn-arcade btn-blue" id="arcade-btn-b"></button>
+                    <div class="panel-label">B</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Regresar a la Invitación -->
+    <div class="back-nav">
+        <a href="index.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> REGRESAR A LA INVITACIÓN
+        </a>
+    </div>
+
+    <!-- SCRIPT DE JUEGO -->
+    <script>
+        // Lógica de sonido arcade dinámica con Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep(freq, type, duration) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = type || 'square';
+            osc.frequency.value = freq || 440;
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // Efectos predefinidos
+        function soundCoin() {
+            playBeep(987.77, 'sine', 0.08);
+            setTimeout(() => playBeep(1318.51, 'sine', 0.15), 80);
+        }
+
+        function soundSelect() {
+            playBeep(523.25, 'triangle', 0.05);
+        }
+
+        function soundConfirm() {
+            playBeep(659.25, 'square', 0.06);
+            setTimeout(() => playBeep(880, 'square', 0.12), 60);
+        }
+
+        function soundWin() {
+            playBeep(523.25, 'triangle', 0.1);
+            setTimeout(() => playBeep(659.25, 'triangle', 0.1), 100);
+            setTimeout(() => playBeep(783.99, 'triangle', 0.1), 200);
+            setTimeout(() => playBeep(1046.50, 'triangle', 0.3), 300);
+        }
+
+        // --- PREGUNTAS DE TRIVIA ---
+        const TRIVIA_QUESTIONS = [
+            {
+                q: "¿A quién de los papás creen que se le olvidará cambiar el primer pañal de Enzo?",
+                options: [
+                    "A Papá (¡Seguro se distrae programando beats!)",
+                    "A Mamá (¡Ocupadísima tomando hermosas fotos de Enzo!)",
+                    "A ninguno (¡Ambos están 100% coordinados en modo cooperativo!)"
+                ],
+                points: 200
+            },
+            {
+                q: "¿Qué superpoder heredará Enzo primero?",
+                options: [
+                    "Habilidad absoluta para hackear consolas retro.",
+                    "Súper oído musical para mezclar canciones.",
+                    "Habilidad para comer papillas a velocidad hipersónica."
+                ],
+                points: 200
+            },
+            {
+                q: "¿Qué estilo musical será el favorito de Enzo para dormir?",
+                options: [
+                    "Synthwave / Beats retro-futuristas a bajo volumen.",
+                    "Lo-Fi Chill para concentrarse en su siesta.",
+                    "Rock clásico de los 80s para recargar energía."
+                ],
+                points: 200
+            },
+            {
+                q: "¿Quién será el que más consienta a Enzo en la fiesta?",
+                options: [
+                    "Los tíos y amigos de los papás (¡Por supuesto!)",
+                    "Los abuelos (En modo consentidor supremo activado)",
+                    "Todos por igual (¡Enzo es el rey de la noche!)"
+                ],
+                points: 200
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOptionIndex = null;
+        let predictionData = {};
+
+        // Botones físicos simulación
+        const stick = document.getElementById('stick');
+        const btnA = document.getElementById('arcade-btn-a');
+        const btnB = document.getElementById('arcade-btn-b');
+
+        // Mover joystick en clics físicos
+        function flexJoystick(dir) {
+            soundSelect();
+            if (dir === 'up') stick.style.transform = 'translateY(-10px)';
+            if (dir === 'down') stick.style.transform = 'translateY(10px)';
+            if (dir === 'left') stick.style.transform = 'translateX(-10px)';
+            if (dir === 'right') stick.style.transform = 'translateX(10px)';
+            setTimeout(() => stick.style.transform = 'translate(0)', 150);
+        }
+
+        btnA.addEventListener('click', () => { flexJoystick('right'); soundConfirm(); });
+        btnB.addEventListener('click', () => { flexJoystick('left'); soundCoin(); });
+
+        // NAVEGACIÓN Y PANTALLAS
+        const screenIntro = document.getElementById('screen-intro');
+        const screenTrivia = document.getElementById('screen-trivia');
+        const screenPredictions = document.getElementById('screen-predictions');
+        const screenResults = document.getElementById('screen-results');
+
+        // 1. Iniciar Juego
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            soundCoin();
+            screenIntro.classList.add('hidden');
+            screenTrivia.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        // Cargar Pregunta
+        function loadQuestion() {
+            const q = TRIVIA_QUESTIONS[currentQuestion];
+            document.getElementById('question-number').textContent = `PREGUNTA ${currentQuestion + 1}/${TRIVIA_QUESTIONS.length}`;
+            document.getElementById('q-text').textContent = q.q;
+            
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = '';
+            
+            selectedOptionIndex = null;
+
+            q.options.forEach((opt, idx) => {
+                const letter = String.fromCharCode(65 + idx); // A, B, C...
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.innerHTML = `
+                    <span class="option-marker">${letter}</span>
+                    <span>${opt}</span>
+                `;
+                card.addEventListener('click', () => {
+                    soundSelect();
+                    // Limpiar seleccionados
+                    document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedOptionIndex = idx;
+                });
+                optionsContainer.appendChild(card);
+            });
+        }
+
+        // Siguiente Pregunta
+        document.getElementById('btn-next-question').addEventListener('click', () => {
+            if (selectedOptionIndex === null) {
+                alert('🕹️ ¡Selecciona una opción para continuar con tu joystick!');
+                return;
+            }
+
+            soundConfirm();
+            // Sumar puntos por responder (¡En este juego todos ganan!)
+            score += TRIVIA_QUESTIONS[currentQuestion].points;
+            document.getElementById('score-indicator').textContent = `SCORE: ${String(score).padStart(4, '0')}`;
+
+            currentQuestion++;
+            if (currentQuestion < TRIVIA_QUESTIONS.length) {
+                loadQuestion();
+            } else {
+                // Ir a la fase de predicciones
+                screenTrivia.classList.add('hidden');
+                screenPredictions.classList.remove('hidden');
+            }
+        });
+
+        // Enviar Predicciones
+        document.getElementById('predictions-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            soundConfirm();
+
+            const author = document.getElementById('pred-author').value.trim();
+            const date = document.getElementById('pred-date').value;
+            const resemblance = document.getElementById('pred-resemblance').value;
+
+            // Formatear fecha legible
+            const formattedDate = new Date(date).toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            predictionData = { author, date: formattedDate, resemblance };
+
+            // Mostrar resultados finales
+            screenPredictions.classList.add('hidden');
+            screenResults.classList.remove('hidden');
+            soundWin();
+
+            // Rellenar Boleto
+            document.getElementById('final-score').textContent = `${score} PTS`;
+            
+            let ranking = "GAMER PRO 👾";
+            if (score >= 800) ranking = "TIME TRAVELLER 🚀";
+            document.getElementById('score-ranking').textContent = `RANKING: ${ranking}`;
+
+            const descText = `✨ El boleto del tiempo del invitado **${author}** predice que Enzo llegará al mundo el **${formattedDate}** y tendrá **${resemblance}** de rasgos de sus papás. ¡Coordenadas espaciales registradas con éxito! ✨`;
+            document.getElementById('prediction-summary-text').textContent = descText;
+        });
+
+        // Compartir por WhatsApp
+        document.getElementById('btn-share-whatsapp').addEventListener('click', () => {
+            soundConfirm();
+            let msg = `👾 *ENZO ARCADE GAME - BOLETO DE TIEMPO* 👾\n\n`;
+            msg += `🚀 *Invitado:* ${predictionData.author}\n`;
+            msg += `🏆 *Score:* ${score} PTS\n`;
+            msg += `📅 *Predicción de Nacimiento:* ${predictionData.date}\n`;
+            msg += `⚡ *Parecido Predicho:* ${predictionData.resemblance}\n\n`;
+            msg += `🛸 _¡Listo para celebrar la llegada del primer bebé: Enzo!_`;
+
+            const encoded = encodeURIComponent(msg);
+            // Reemplazar con el teléfono de los padres
+            window.open(`https://wa.me/521234567890?text=${encoded}`, '_blank');
+        });
+
+        // Reiniciar
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            soundCoin();
+            currentQuestion = 0;
+            score = 0;
+            selectedOptionIndex = null;
+            document.getElementById('score-indicator').textContent = 'SCORE: 0000';
+            
+            // Reiniciar inputs
+            document.getElementById('predictions-form').reset();
+
+            screenResults.classList.add('hidden');
+            screenIntro.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
