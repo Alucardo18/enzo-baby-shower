@@ -5,8 +5,8 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 📅 CONFIGURACIÓN DE FECHA EVENTO 📅 ---
-    // Fecha objetivo: Sábado 11 de Julio de 2026 a las 17:00 hrs.
-    const EVENT_DATE = new Date('July 11, 2026 17:00:00').getTime();
+    // Fec objetivo: Sábado 06 de Junio de 2026 a las 17:30 hrs.
+    const EVENT_DATE = new Date('June 6, 2026 17:30:00').getTime();
 
     // --- 🎵 DUAL AUDIO SYSTEM (LOCAL MP3 & PROCEDURAL LO-FI SYNTH) 🎵 ---
     let audioContext = null;
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localAudio.play().then(() => {
             isAudioPlaying = true;
             isUsingSynth = false;
-            updatePlayerUI('Local Synthwave Beat', 'REPRODUCIENDO');
+            updatePlayerUI('Around The World (Santti Remix)', 'REPRODUCIENDO');
         }).catch((err) => {
             // Si falla o no existe (GitHub Pages 404), activamos el sintetizador procedural
             console.log('Audio local no encontrado o bloqueado, activando Sintetizador Lofi Procedural...');
@@ -163,14 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 vinylDisc.classList.remove('playing');
                 vinylPlayer.classList.remove('playing-arm');
                 playPauseIcon.className = 'fa-solid fa-play';
-                updatePlayerUI('Local Synthwave Beat', 'PAUSADO');
+                updatePlayerUI('Around The World (Santti Remix)', 'PAUSADO');
             } else {
                 localAudio.play();
                 isAudioPlaying = true;
                 vinylDisc.classList.add('playing');
                 vinylPlayer.classList.add('playing-arm');
                 playPauseIcon.className = 'fa-solid fa-pause';
-                updatePlayerUI('Local Synthwave Beat', 'REPRODUCIENDO');
+                updatePlayerUI('Around The World (Santti Remix)', 'REPRODUCIENDO');
             }
         }
     }
@@ -461,8 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 🎟️ FORMULARIO RSVP CON INTEGRACIÓN DIRECTA A WHATSAPP 🎟️ ---
     const rsvpForm = document.getElementById('rsvp-form');
     // Número de teléfono de los papás en formato internacional
-    // Reemplazar con el teléfono real deseado (ej. 521XXXXXXXXXX para México)
-    const WA_PHONE = '521234567890'; 
+    const WA_PHONE = '529993380373'; 
 
     rsvpForm.addEventListener('submit', (e) => {
         e.preventDefault();
