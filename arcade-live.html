@@ -441,11 +441,43 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
+
+        /* Estilos del Overlay de Activación */
+        .activation-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #04040d;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+
+        .activation-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="live-container">
+        
+        <!-- 🪙 Retro Sound Activation Overlay 🪙 -->
+        <div id="sound-activation-overlay" class="activation-overlay">
+            <h1 style="font-family: var(--font-arcade); font-size: 2.2rem; color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); text-align: center; line-height: 1.6; letter-spacing: 2px;">ENZO'S LIVE ARCADE</h1>
+            <p style="font-size: 1.15rem; color: #7b7899; font-family: var(--font-heading); font-weight: 700; text-align: center;">Haga clic para activar el audio de la cabina y conectar el juego</p>
+            <button id="btn-activate-audio" style="font-family: var(--font-arcade); font-size: 1rem; background: var(--neon-pink); color: white; border: none; padding: 22px 45px; border-radius: 12px; cursor: pointer; box-shadow: 0 0 25px var(--neon-pink); transition: all 0.3s; letter-spacing: 2px; font-weight: bold;">
+                INSERT COIN <i class="fa-solid fa-coins" style="margin-left: 8px;"></i>
+            </button>
+        </div>
         
         <!-- Marquee de Consola Widescreen -->
         <div class="live-header">
@@ -1044,6 +1076,19 @@
                 location.reload();
             };
         }
+
+        // --- ACTIVAR AUDIO DE CABINA ---
+        document.getElementById('btn-activate-audio').addEventListener('click', () => {
+            // Inicializar AudioContext con un gesto real del usuario
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            soundCoinIn();
+            document.getElementById('sound-activation-overlay').classList.add('fade-out');
+        });
     </script>
 </body>
 </html>
