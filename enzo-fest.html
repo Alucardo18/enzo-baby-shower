@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENZO FEST 🪐 Live Visuals</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d4edd;
+            --neon-green: #39ff14;
+            --font-arcade: 'Press Start 2P', monospace;
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            color: #fff;
+            font-family: var(--font-body);
+        }
+
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* HUD Glassmorphism Layer */
+        .hud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+            transition: opacity 0.5s ease;
+        }
+
+        .hud-container.hidden {
+            opacity: 0;
+        }
+
+        /* Glassmorphic Cards */
+        .glass-panel {
+            background: rgba(2, 2, 8, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .sys-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .sys-title {
+            font-family: var(--font-arcade);
+            font-size: 0.75rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: pulseGreen 1.5s infinite alternate;
+        }
+
+        @keyframes pulseGreen {
+            from { transform: scale(0.8); opacity: 0.5; }
+            to { transform: scale(1.2); opacity: 1; }
+        }
+
+        .sys-subtitle {
+            font-size: 0.85rem;
+            color: #7b7899;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Central Visualizer & Massive Title */
+        .hud-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .festival-marquee {
+            font-family: var(--font-heading);
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #fff, #b3d1ff, #ffcce6, #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textShimmer 8s linear infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        @keyframes textShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sub-marquee {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            color: var(--neon-pink);
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            animation: glowPulse 2s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink); }
+            to { text-shadow: 0 0 15px var(--neon-pink), 0 0 25px var(--neon-pink); }
+        }
+
+        /* Bottom Control Info */
+        .hud-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        /* Dynamic Equalizer in HUD */
+        .visualizer-hud-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 50px;
+            width: 160px;
+        }
+
+        .eq-bar {
+            width: 6px;
+            height: 5%;
+            background: linear-gradient(to top, var(--neon-blue), var(--neon-pink));
+            border-radius: 3px;
+            transition: height 0.05s ease;
+        }
+
+        .keyboard-controls-panel {
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #b9b6e3;
+        }
+
+        .keyboard-controls-panel span {
+            color: white;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.15);
+            margin-right: 4px;
+        }
+
+        /* VJ Manual Flashes */
+        .strobe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.05s ease-out;
+        }
+
+        .strobe-overlay.active {
+            opacity: 0.95;
+            transition: none;
+        }
+
+        /* Retro Start Screen Overlay */
+        .intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0a081a 0%, #020205 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        .intro-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .logo-intro-box {
+            text-align: center;
+        }
+
+        .intro-title {
+            font-family: var(--font-heading);
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 15px;
+            color: white;
+            text-shadow: 0 0 20px var(--neon-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-subtitle {
+            font-family: var(--font-arcade);
+            font-size: 0.9rem;
+            color: var(--neon-purple);
+            letter-spacing: 6px;
+            text-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        .intro-btn {
+            font-family: var(--font-arcade);
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 30px var(--neon-pink);
+            transition: all 0.3s;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+
+        .intro-btn:hover {
+            transform: scale(1.05);
+            background: white;
+            color: black;
+            box-shadow: 0 0 40px white;
+        }
+
+        .mic-option-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            pointer-events: auto;
+        }
+
+        .btn-mic-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #7b7899;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-mic-toggle.active {
+            background: rgba(57, 255, 20, 0.1);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+        }
+
+        /* Glitch Effect Classes */
+        .glitch-text {
+            animation: glitchEffect 0.3s infinite;
+        }
+
+        @keyframes glitchEffect {
+            0% { transform: translate(0) }
+            20% { transform: translate(-3px, 2px) skewX(2deg) }
+            40% { transform: translate(3px, -2px) skewY(-2deg) }
+            60% { transform: translate(-2px, -3px) }
+            80% { transform: translate(2px, 3px) }
+            100% { transform: translate(0) }
+        }
+
+        /* Telemetry overlay panel styling */
+        .telemetry-panel {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #7b7899;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .telemetry-row span.val {
+            color: var(--neon-blue);
+        }
+
+        /* Sound reactive sensitivity slider container */
+        .sensitivity-slider-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .sensitivity-slider-box input[type=range] {
+            -webkit-appearance: none;
+            width: 100px;
+            background: rgba(255,255,255,0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .sensitivity-slider-box input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--neon-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌟 STROBE / WHITE OUT VJ LAYER 🌟 -->
+    <div id="strobe-layer" class="strobe-overlay"></div>
+
+    <!-- 🪙 INTRO / AUDIO CONCURRENCY PERMISSION OVERLAY 🪙 -->
+    <div id="intro-screen" class="intro-overlay">
+        <div class="logo-intro-box">
+            <div class="intro-title">ENZO FEST</div>
+            <div class="intro-subtitle">VJ CYBER LIVE STAGE</div>
+        </div>
+        <button class="intro-btn" id="btn-start-visuals">
+            START SHOW <i class="fa-solid fa-play" style="margin-left: 10px;"></i>
+        </button>
+        <p style="color: #7b7899; font-size: 0.85rem; max-width: 400px; text-align: center; line-height: 1.6;">
+            Presiona el botón para inicializar los gráficos 3D y conectar el micrófono para una reactividad completa.
+        </p>
+    </div>
+
+    <!-- 💻 HUD CONTROLS & INFO LAYOUT 💻 -->
+    <div id="hud" class="hud-container">
+        
+        <!-- Header Info -->
+        <div class="hud-header">
+            <div class="glass-panel sys-info">
+                <div class="sys-title">
+                    <div class="pulse-dot"></div> ENZO_FEST_SYSTEM.SYS
+                </div>
+                <div class="sys-subtitle" id="vj-mode-text">MODE: AUTO MIC</div>
+                <div class="sensitivity-slider-box">
+                    <i class="fa-solid fa-microphone-lines" style="color: #7b7899; font-size: 0.75rem;"></i>
+                    <input type="range" id="sensitivity-slider" min="1" max="10" step="0.5" value="5" title="Sensibilidad del Micrófono">
+                    <span id="sensitivity-val" style="font-size: 0.7rem; font-family: monospace; color: var(--neon-blue);">x5.0</span>
+                </div>
+            </div>
+
+            <div class="glass-panel telemetry-panel">
+                <div class="telemetry-row"><span>BPM:</span><span class="val" id="bpm-val">128.0</span></div>
+                <div class="telemetry-row"><span>BLOOM:</span><span class="val" id="bloom-val">1.20</span></div>
+                <div class="telemetry-row"><span>RENDER:</span><span class="val" style="color: var(--neon-green)">GPU COMP</span></div>
+            </div>
+        </div>
+
+        <!-- Center Festival Titles -->
+        <div class="hud-center">
+            <h1 class="festival-marquee" id="main-title">Enzo Fest</h1>
+            <div class="sub-marquee" id="sub-title">EDM MAIN STAGE</div>
+        </div>
+
+        <!-- Footer Systems & Manual control logs -->
+        <div class="hud-footer">
+            <div class="glass-panel" style="pointer-events: auto;">
+                <div class="visualizer-hud-container" id="eq-hud">
+                    <!-- Dynamic bars created by script -->
+                </div>
+            </div>
+
+            <div class="glass-panel keyboard-controls-panel">
+                <p><strong>TECLADO VJ LIVE CONTROLS:</strong></p>
+                <p><span>ESPACIO</span> Strobo Flash | <span>G</span> Glitch Effect | <span>C</span> Color Shift</p>
+                <p><span>V</span> Camera Angles | <span>M</span> Toggle Mic | <span>H</span> Hide HUD (Showcase)</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- WebGL Canvas for 3D graphics -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- 🌐 TRES.JS E IMPORTS DE POST-PROCESAMIENTO DESDE CDN 🌐 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+    <!-- 🕹️ LÓGICA DE PROGRAMACIÓN DEL ENGINE 3D Y DE AUDIO 🕹️ -->
+    <script>
+        // --- VARIABLES GLOBALES ---
+        let scene, camera, renderer, composer;
+        let bloomPass;
+        let babyCoreGroup, cyberVisor, wireframeOuter, portalTorus, portalWire, particleSystem;
+        let directionalLight1, directionalLight2, pointCenterLight;
+        
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let isAudioReactive = true; // Empieza en true
+        let micStream = null;
+
+        // VJ Parameters
+        let colorThemes = [
+            { cian: 0x00f3ff, magenta: 0xff007f, ambient: 0x0a081a, name: 'CYBERPUNK' },
+            { cian: 0x39ff14, magenta: 0x9d4edd, ambient: 0x040c04, name: 'NEON FOREST' },
+            { cian: 0xffcc00, magenta: 0xff3300, ambient: 0x140602, name: 'SOLAR STORM' },
+            { cian: 0xff0055, magenta: 0x00ffff, ambient: 0x0c040d, name: 'RETRO FUTURE' }
+        ];
+        let currentThemeIndex = 0;
+        let manualBpm = 128.0;
+        let micSensitivity = 5.0;
+
+        // Visual states
+        let pulseIntensity = 0;
+        let glitchTimer = 0;
+        let cameraAngle = 0; // 0: standard, 1: dramatic low-angle, 2: close-up, 3: panning
+        let zoomTarget = 15;
+        let targetBloomStrength = 1.2;
+
+        // --- INICIALIZACIÓN ---
+        function createEqualizerBars() {
+            const eqContainer = document.getElementById('eq-hud');
+            if (eqContainer) {
+                eqContainer.innerHTML = '';
+                for (let i = 0; i < 20; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'eq-bar';
+                    bar.id = `eq-bar-${i}`;
+                    eqContainer.appendChild(bar);
+                }
+            }
+        }
+
+        document.getElementById('btn-start-visuals').addEventListener('click', () => {
+            // Crear barras síncronas antes de que empiece el bucle de animación
+            createEqualizerBars();
+            
+            // Iniciar Audio Context
+            initAudio();
+            
+            // Ocultar Overlay
+            document.getElementById('intro-screen').classList.add('hidden');
+            
+            // Inicializar WebGL
+            initWebGL();
+            animate();
+        });
+
+        // Configuración de sensibilidad
+        const sensitivitySlider = document.getElementById('sensitivity-slider');
+        const sensitivityVal = document.getElementById('sensitivity-val');
+        sensitivitySlider.addEventListener('input', (e) => {
+            micSensitivity = parseFloat(e.target.value);
+            sensitivityVal.textContent = `x${micSensitivity.toFixed(1)}`;
+        });
+
+        // --- SISTEMA DE AUDIO (WEB AUDIO API) ---
+        async function initAudio() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextClass();
+                
+                // Pedir micrófono
+                const constraints = { audio: true, video: false };
+                micStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                const source = audioContext.createMediaStreamSource(micStream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                source.connect(analyser);
+                console.log("Micrófono conectado con éxito.");
+                document.getElementById('vj-mode-text').innerHTML = `MODE: LIVE MIC <i class="fa-solid fa-microphone" style="color: var(--neon-green); margin-left: 5px;"></i>`;
+            } catch (err) {
+                console.warn("No se pudo acceder al micrófono. Iniciando en modo simulación manual.", err);
+                isAudioReactive = false;
+                document.getElementById('vj-mode-text').innerHTML = `MODE: MANUAL DJ <i class="fa-solid fa-keyboard" style="color: var(--neon-pink); margin-left: 5px;"></i>`;
+            }
+            
+            // Generar barras dinámicas del HUD del ecualizador (ya creadas síncronamente en start click)
+            createEqualizerBars();
+        }
+
+        // --- ENGINE WEBGL (THREE.JS + BLOOM) ---
+        function initWebGL() {
+            const canvas = document.getElementById('webgl-canvas');
+            
+            // Escena
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020205, 0.015);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, zoomTarget);
+
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ReinhardToneMapping;
+
+            // --- ESCENARIO 3D / OBJETOS ---
+            
+            // Grupo central del Androide Bebé
+            babyCoreGroup = new THREE.Group();
+            scene.add(babyCoreGroup);
+
+            // 1. Cabeza Androide (Polígono metálico minimalista de bebé)
+            // Usamos un Icosaedro para darle ese toque geométrico, moderno, low-poly de Anyma
+            const headGeo = new THREE.IcosahedronGeometry(2.2, 2);
+            const headMat = new THREE.MeshStandardMaterial({
+                color: 0xddddff,
+                metalness: 1.0,
+                roughness: 0.15,
+                flatShading: true,
+                bumpScale: 0.05
+            });
+            const babyHead = new THREE.Mesh(headGeo, headMat);
+            babyCoreGroup.add(babyHead);
+
+            // 2. Visor Neón (Holograma cibernético)
+            // Toroide recortado o cilindro plano delante de los ojos
+            const visorGeo = new THREE.CylinderGeometry(2.35, 2.35, 0.4, 24, 1, true, 0, Math.PI * 0.9);
+            const visorMat = new THREE.MeshStandardMaterial({
+                color: colorThemes[currentThemeIndex].cian,
+                emissive: colorThemes[currentThemeIndex].cian,
+                emissiveIntensity: 3.0,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.9
+            });
+            cyberVisor = new THREE.Mesh(visorGeo, visorMat);
+            cyberVisor.rotation.x = Math.PI / 2;
+            cyberVisor.rotation.z = -Math.PI / 2.2; // Alinear al frente
+            cyberVisor.position.y = 0.2;
+            babyCoreGroup.add(cyberVisor);
+
+            // 3. Casco Digital Exterior (Wireframe brillante)
+            const wireGeo = new THREE.IcosahedronGeometry(2.45, 2);
+            const wireMat = new THREE.MeshBasicMaterial({
+                color: colorThemes[currentThemeIndex].magenta,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.4
+            });
+            wireframeOuter = new THREE.Mesh(wireGeo, wireMat);
+            babyCoreGroup.add(wireframeOuter);
+
+            // 4. Cables de Red Cibernética
+            // Un par de toroides cruzados que simulan órbitas de giroscopio o anillos de retención
+            const ring1Geo = new THREE.TorusGeometry(3.2, 0.04, 8, 48);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: 0x444455,
+                metalness: 1.0,
+                roughness: 0.1
+            });
+            const ring1 = new THREE.Mesh(ring1Geo, ringMat);
+            ring1.rotation.y = Math.PI / 4;
+            babyCoreGroup.add(ring1);
+
+            const ring2 = new THREE.Mesh(ring1Geo, ringMat);
+            ring2.rotation.x = Math.PI / 4;
+            babyCoreGroup.add(ring2);
+
+            // 5. El Portal Gigante del Fondo
+            const torusGeo = new THREE.TorusGeometry(7.5, 0.45, 12, 64);
+            const torusMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                metalness: 1.0,
+                roughness: 0.12,
+                flatShading: true
+            });
+            portalTorus = new THREE.Mesh(torusGeo, torusMat);
+            portalTorus.position.z = -4; // Fondo
+            scene.add(portalTorus);
+
+            // Aro de neón interno girando en sentido opuesto
+            const pWireGeo = new THREE.TorusGeometry(7.2, 0.08, 8, 48);
+            const pWireMat = new THREE.MeshBasicMaterial({
+                color: colorThemes[currentThemeIndex].cian,
+                wireframe: true
+            });
+            portalWire = new THREE.Mesh(pWireGeo, pWireMat);
+            portalWire.position.z = -3.95;
+            scene.add(portalWire);
+
+            // 6. Generador de Partículas Cósmicas
+            const particleCount = 2000;
+            const particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                // Posicionar partículas en un cilindro / túnel espacial
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 5 + Math.random() * 15;
+                positions[i] = Math.cos(angle) * radius;
+                positions[i + 1] = Math.sin(angle) * radius;
+                positions[i + 2] = (Math.random() - 0.5) * 40; // Profundidad
+
+                // Asignar colores mezclados (cian / magenta)
+                const isCyan = Math.random() > 0.5;
+                const theme = colorThemes[currentThemeIndex];
+                const c = isCyan ? new THREE.Color(theme.cian) : new THREE.Color(theme.magenta);
+                colors[i] = c.r;
+                colors[i + 1] = c.g;
+                colors[i + 2] = c.b;
+            }
+
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.12,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.75,
+                blending: THREE.AdditiveBlending
+            });
+
+            particleSystem = new THREE.Points(particleGeo, particleMat);
+            scene.add(particleSystem);
+
+            // --- ILUMINACIÓN ---
+            
+            // Luz cian desde la izquierda
+            directionalLight1 = new THREE.DirectionalLight(colorThemes[currentThemeIndex].cian, 1.8);
+            directionalLight1.position.set(-8, 4, 5);
+            scene.add(directionalLight1);
+
+            // Luz magenta desde la derecha
+            directionalLight2 = new THREE.DirectionalLight(colorThemes[currentThemeIndex].magenta, 1.8);
+            directionalLight2.position.set(8, -4, 5);
+            scene.add(directionalLight2);
+
+            // Luz central palpitante detrás del androide
+            pointCenterLight = new THREE.PointLight(colorThemes[currentThemeIndex].magenta, 2.5, 15);
+            pointCenterLight.position.set(0, 0, -2);
+            scene.add(pointCenterLight);
+
+            // --- CAPA DE POST-PROCESAMIENTO (BLOOM EFFECT DE NEÓN) ---
+            const renderPass = new THREE.RenderPass(scene, camera);
+            
+            // UnrealBloomPass( resolution, strength, radius, threshold )
+            bloomPass = new THREE.UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                targetBloomStrength, // Fuerza
+                0.8, // Radio
+                0.15 // Threshold (umbral de brillo)
+            );
+
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderPass);
+            composer.addPass(bloomPass);
+
+            // Escuchar resize de pantalla
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // --- CONTROL RESIZE DE PANTALLA ---
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            bloomPass.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- TECLADO CONTROLES VJ (LIVE DJ INPUTS) ---
+        window.addEventListener('keydown', (e) => {
+            // Strobo Drop (Barra espaciadora)
+            if (e.code === 'Space') {
+                triggerStrobe();
+            }
+
+            // Glitch digital (Tecla G)
+            if (e.code === 'KeyG') {
+                triggerGlitch();
+            }
+
+            // Cambiar paletas de color (Tecla C)
+            if (e.code === 'KeyC') {
+                switchColorTheme();
+            }
+
+            // Cambiar ángulo de cámara (Tecla V)
+            if (e.code === 'KeyV') {
+                switchCameraAngle();
+            }
+
+            // Activar/Desactivar Micrófono manualmente (Tecla M)
+            if (e.code === 'KeyM') {
+                isAudioReactive = !isAudioReactive;
+                const modeText = document.getElementById('vj-mode-text');
+                if (isAudioReactive && analyser) {
+                    modeText.innerHTML = `MODE: LIVE MIC <i class="fa-solid fa-microphone" style="color: var(--neon-green); margin-left: 5px;"></i>`;
+                } else {
+                    modeText.innerHTML = `MODE: MANUAL DJ <i class="fa-solid fa-keyboard" style="color: var(--neon-pink); margin-left: 5px;"></i>`;
+                }
+            }
+
+            // Ocultar / Mostrar el HUD de textos para capturas o pantalla limpia (Tecla H)
+            if (e.code === 'KeyH') {
+                const hud = document.getElementById('hud');
+                hud.classList.toggle('hidden');
+            }
+        });
+
+        // --- DISPARADORES DE EFECTOS ---
+        function triggerStrobe() {
+            const strobe = document.getElementById('strobe-layer');
+            strobe.classList.add('active');
+            targetBloomStrength = 4.5; // Brillo máximo
+            
+            // Púlsa los objetos 3D
+            babyCoreGroup.scale.set(1.4, 1.4, 1.4);
+            
+            setTimeout(() => {
+                strobe.classList.remove('active');
+                targetBloomStrength = 1.2;
+            }, 80);
+        }
+
+        function triggerGlitch() {
+            glitchTimer = 18; // Duración en frames del glitch
+            document.getElementById('main-title').classList.add('glitch-text');
+            document.getElementById('sub-title').classList.add('glitch-text');
+            
+            setTimeout(() => {
+                document.getElementById('main-title').classList.remove('glitch-text');
+                document.getElementById('sub-title').classList.remove('glitch-text');
+            }, 400);
+        }
+
+        function switchColorTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % colorThemes.length;
+            const theme = colorThemes[currentThemeIndex];
+            
+            // Actualizar luces
+            directionalLight1.color.setHex(theme.cian);
+            directionalLight2.color.setHex(theme.magenta);
+            pointCenterLight.color.setHex(theme.magenta);
+            
+            // Actualizar materiales de neón del androide
+            cyberVisor.material.color.setHex(theme.cian);
+            cyberVisor.material.emissive.setHex(theme.cian);
+            wireframeOuter.material.color.setHex(theme.magenta);
+            portalWire.material.color.setHex(theme.cian);
+
+            // Re-colorear partículas
+            const colors = particleSystem.geometry.attributes.color.array;
+            for (let i = 0; i < colors.length; i += 3) {
+                const isCyan = Math.random() > 0.5;
+                const c = isCyan ? new THREE.Color(theme.cian) : new THREE.Color(theme.magenta);
+                colors[i] = c.r;
+                colors[i + 1] = c.g;
+                colors[i + 2] = c.b;
+            }
+            particleSystem.geometry.attributes.color.needsUpdate = true;
+
+            // Flash del HUD en modo de consola
+            console.log(`Paleta VJ cambiada a: ${theme.name}`);
+        }
+
+        function switchCameraAngle() {
+            cameraAngle = (cameraAngle + 1) % 4;
+            
+            if (cameraAngle === 0) {
+                // Ángulo estándar frontal
+                zoomTarget = 15;
+                camera.position.set(0, 0, zoomTarget);
+                camera.lookAt(0, 0, 0);
+            } else if (cameraAngle === 1) {
+                // Ángulo bajo dramático
+                zoomTarget = 14;
+                camera.position.set(0, -5, 12);
+                camera.lookAt(0, 1.5, 0);
+            } else if (cameraAngle === 2) {
+                // Close-up extremo al visor
+                zoomTarget = 8;
+                camera.position.set(0, 0.2, zoomTarget);
+                camera.lookAt(0, 0.2, 0);
+            }
+            // El ángulo 3 (panning) es dinámico y se procesa en el bucle
+        }
+
+        // --- BUCLE DE ANIMACIÓN (RENDER LOOP) ---
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // --- 1. PROCESAR REACTIVIDAD DE AUDIO ---
+            let bassNormalized = 0;
+            let trebleNormalized = 0;
+            let midNormalized = 0;
+
+            if (isAudioReactive && analyser && dataArray) {
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Extraer sub-rangos de frecuencia
+                // Rango Bass: índices de 0 a 8 (~20Hz a ~150Hz)
+                let bassSum = 0;
+                for (let i = 0; i < 8; i++) {
+                    bassSum += dataArray[i];
+                }
+                bassNormalized = (bassSum / 8) / 255;
+
+                // Rango Mid: índices de 8 a 32 (~150Hz a ~600Hz)
+                let midSum = 0;
+                for (let i = 8; i < 32; i++) {
+                    midSum += dataArray[i];
+                }
+                midNormalized = (midSum / 24) / 255;
+
+                // Rango Treble: índices de 32 a 80 (~600Hz a ~2000Hz)
+                let trebleSum = 0;
+                for (let i = 32; i < 80; i++) {
+                    trebleSum += dataArray[i];
+                }
+                trebleNormalized = (trebleSum / 48) / 255;
+
+                // Aplicar sensibilidad configurada por el usuario
+                bassNormalized = Math.min(1.0, bassNormalized * (micSensitivity / 5));
+                midNormalized = Math.min(1.0, midNormalized * (micSensitivity / 5));
+                trebleNormalized = Math.min(1.0, trebleNormalized * (micSensitivity / 5));
+
+                // Actualizar barras del ecualizador del HUD
+                for (let i = 0; i < 20; i++) {
+                    // Tomar datos interpolados del espectro de audio
+                    const rawVal = dataArray[Math.floor(i * (dataArray.length / 20))];
+                    const heightPercent = Math.max(5, (rawVal / 255) * 100);
+                    const barEl = document.getElementById(`eq-bar-${i}`);
+                    if (barEl) barEl.style.height = `${heightPercent}%`;
+                }
+
+                // Simular cálculo de BPM de festival basado en peaks de bajos
+                if (bassNormalized > 0.78) {
+                    manualBpm = 120 + Math.floor(bassNormalized * 15);
+                    document.getElementById('bpm-val').textContent = manualBpm.toFixed(1);
+                }
+            } else {
+                // MODO MANUAL: Generar latidos artificiales simulando un bombo a 128 BPM
+                const bpmInterval = (60 / 128) * 1000; // ms por beat
+                const fakeBeat = (Date.now() % bpmInterval) / bpmInterval; // 0 a 1
+                
+                // Simular pico del beat (decay rápido)
+                bassNormalized = Math.pow(Math.max(0, 1.0 - fakeBeat * 4), 3.0);
+                midNormalized = 0.2 + 0.1 * Math.sin(time * 3);
+                trebleNormalized = 0.1 + 0.2 * Math.cos(time * 5);
+
+                // Mover barras de ecualizador con ondas senoidales hermosas en modo manual
+                for (let i = 0; i < 20; i++) {
+                    const fakeVal = 10 + 60 * Math.sin(time * 4 + i * 0.4) * Math.cos(time * 2);
+                    const barEl = document.getElementById(`eq-bar-${i}`);
+                    if (barEl) barEl.style.height = `${Math.max(5, Math.abs(fakeVal))}%`;
+                }
+                document.getElementById('bpm-val').textContent = "128.0";
+            }
+
+            // --- 2. APLICAR ANIMACIONES DE GEOMETRÍA ---
+            
+            // Rotación del Androide Bebé
+            babyCoreGroup.rotation.y = time * 0.15 + (midNormalized * 0.05);
+            // Palpitación y cabeceo sutil
+            babyCoreGroup.rotation.x = Math.sin(time * 0.8) * 0.06 + (bassNormalized * 0.02);
+            babyCoreGroup.rotation.z = Math.cos(time * 0.4) * 0.04;
+            
+            // Escala del Androide con el Bajo de la música
+            const scale = 1.0 + (bassNormalized * 0.18);
+            babyCoreGroup.scale.set(scale, scale, scale);
+
+            // Escala del Casco exterior (Late de forma desfasada)
+            const wireScale = 1.0 + (midNormalized * 0.1);
+            wireframeOuter.scale.set(wireScale, wireScale, wireScale);
+            wireframeOuter.rotation.y = -time * 0.3; // Giro inverso
+
+            // Rotación del portal metálico del fondo
+            portalTorus.rotation.y = time * 0.08;
+            portalTorus.rotation.z = time * 0.05;
+            
+            // Giro inverso del aro de neón
+            portalWire.rotation.y = -time * 0.2 - (trebleNormalized * 0.2);
+            portalWire.rotation.z = -time * 0.1;
+
+            // Escala del portal con el bajo
+            const pScale = 1.0 + (bassNormalized * 0.05);
+            portalTorus.scale.set(pScale, pScale, pScale);
+            portalWire.scale.set(pScale, pScale, pScale);
+
+            // --- 3. MOVER PARTÍCULAS CÓSMICAS (EFECTO TÚNEL) ---
+            const positions = particleSystem.geometry.attributes.position.array;
+            const speedMultiplier = 1.0 + (bassNormalized * 4.0); // Hiper-velocidad con el bajo
+            
+            for (let i = 2; i < positions.length; i += 3) {
+                // Mover partículas hacia adelante en el eje Z
+                positions[i] += 0.06 * speedMultiplier;
+                
+                // Si la partícula pasa de la cámara, re-generarla al fondo
+                if (positions[i] > 15) {
+                    positions[i] = -25;
+                }
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.rotation.z = time * 0.02; // Giro cósmico
+
+            // --- 4. EFECTOS ESPECIALES DE CÁMARA & CONTROL VJ ---
+            
+            // Ángulo 3 de cámara: paneo flotante orbital automático
+            if (cameraAngle === 3) {
+                camera.position.x = Math.sin(time * 0.2) * 12;
+                camera.position.z = Math.cos(time * 0.2) * 12 + 2;
+                camera.position.y = Math.sin(time * 0.4) * 3;
+                camera.lookAt(0, 0, 0);
+            } else {
+                // Amortiguar el zoom
+                camera.position.z += (zoomTarget - camera.position.z) * 0.1;
+            }
+
+            // Simular Glitch digital moviendo la cámara y escalando arbitrariamente
+            if (glitchTimer > 0) {
+                glitchTimer--;
+                camera.position.x += (Math.random() - 0.5) * 1.5;
+                camera.position.y += (Math.random() - 0.5) * 1.5;
+                babyCoreGroup.scale.x *= 1.3;
+                
+                // Brillo Bloom extremo en el glitch
+                bloomPass.strength = 3.5;
+                document.getElementById('bloom-val').textContent = "3.50";
+            } else {
+                // Brillo de neón dinámico (latido de luz con el bajo)
+                const currentBloom = targetBloomStrength + (bassNormalized * 1.3);
+                bloomPass.strength = currentBloom;
+                document.getElementById('bloom-val').textContent = currentBloom.toFixed(2);
+            }
+
+            // Luz central late con los bajos
+            pointCenterLight.intensity = 1.0 + (bassNormalized * 4.0);
+
+            // --- 5. RENDERIZACIÓN CON COMPOSER DE BLOOM ---
+            composer.render();
+        }
+
+        // Registrar atajos rápidos en consola
+        console.log("Enzo's VJ Engine activado con éxito.");
+    </script>
+</body>
+</html>

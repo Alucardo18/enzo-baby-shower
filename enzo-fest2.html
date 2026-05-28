@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENZO FEST 2 🪐 Hologram Live Stage</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d4edd;
+            --neon-green: #39ff14;
+            --font-arcade: 'Press Start 2P', monospace;
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            color: #fff;
+            font-family: var(--font-body);
+        }
+
+        #webgl-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* HUD Glassmorphism Layer */
+        .hud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+            transition: opacity 0.5s ease;
+        }
+
+        .hud-container.hidden {
+            opacity: 0;
+        }
+
+        /* Glassmorphic Cards */
+        .glass-panel {
+            background: rgba(2, 2, 8, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .sys-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .sys-title {
+            font-family: var(--font-arcade);
+            font-size: 0.75rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: pulseGreen 1.5s infinite alternate;
+        }
+
+        @keyframes pulseGreen {
+            from { transform: scale(0.8); opacity: 0.5; }
+            to { transform: scale(1.2); opacity: 1; }
+        }
+
+        .sys-subtitle {
+            font-size: 0.85rem;
+            color: #7b7899;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Central Visualizer & Massive Title */
+        .hud-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .festival-marquee {
+            font-family: var(--font-heading);
+            font-size: 4.8rem;
+            font-weight: 900;
+            letter-spacing: 15px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffcce6, #00f3ff, #b3d1ff, #ff007f);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textShimmer 8s linear infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+
+        @keyframes textShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sub-marquee {
+            font-family: var(--font-arcade);
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+            letter-spacing: 5px;
+            text-shadow: 0 0 12px var(--neon-blue);
+            animation: glowPulse 2s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue); }
+            to { text-shadow: 0 0 15px var(--neon-blue), 0 0 25px var(--neon-blue); }
+        }
+
+        /* Bottom Control Info */
+        .hud-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        /* Dynamic Equalizer in HUD */
+        .visualizer-hud-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 50px;
+            width: 160px;
+        }
+
+        .eq-bar {
+            width: 6px;
+            height: 5%;
+            background: linear-gradient(to top, var(--neon-pink), var(--neon-blue));
+            border-radius: 3px;
+            transition: height 0.05s ease;
+        }
+
+        .keyboard-controls-panel {
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #b9b6e3;
+        }
+
+        .keyboard-controls-panel span {
+            color: white;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid rgba(255,255,255,0.15);
+            margin-right: 4px;
+        }
+
+        /* VJ Manual Flashes */
+        .strobe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.05s ease-out;
+        }
+
+        .strobe-overlay.active {
+            opacity: 0.95;
+            transition: none;
+        }
+
+        /* Retro Start Screen Overlay */
+        .intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #070614 0%, #010103 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        .intro-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .logo-intro-box {
+            text-align: center;
+        }
+
+        .intro-title {
+            font-family: var(--font-heading);
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 15px;
+            color: white;
+            text-shadow: 0 0 20px var(--neon-pink);
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-subtitle {
+            font-family: var(--font-arcade);
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+            letter-spacing: 6px;
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .intro-btn {
+            font-family: var(--font-arcade);
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+            padding: 1.5rem 3rem;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 30px var(--neon-blue);
+            transition: all 0.3s;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+
+        .intro-btn:hover {
+            transform: scale(1.05);
+            background: white;
+            color: black;
+            box-shadow: 0 0 40px white;
+        }
+
+        .mic-option-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            pointer-events: auto;
+        }
+
+        /* Glitch Effect Classes */
+        .glitch-text {
+            animation: glitchEffect 0.3s infinite;
+        }
+
+        @keyframes glitchEffect {
+            0% { transform: translate(0) }
+            20% { transform: translate(-3px, 2px) skewX(2deg) }
+            40% { transform: translate(3px, -2px) skewY(-2deg) }
+            60% { transform: translate(-2px, -3px) }
+            80% { transform: translate(2px, 3px) }
+            100% { transform: translate(0) }
+        }
+
+        /* Telemetry overlay panel styling */
+        .telemetry-panel {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #7b7899;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .telemetry-row span.val {
+            color: var(--neon-pink);
+        }
+
+        /* Sound reactive sensitivity slider container */
+        .sensitivity-slider-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .sensitivity-slider-box input[type=range] {
+            -webkit-appearance: none;
+            width: 100px;
+            background: rgba(255,255,255,0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .sensitivity-slider-box input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--neon-pink);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        /* Image reference box styling */
+        .reference-badge {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            z-index: 10;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* Panel de Calibración Holográfica */
+        .calibration-panel {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 230px;
+            z-index: 15;
+            pointer-events: auto;
+            transition: opacity 0.5s ease;
+        }
+
+        .hud-container.hidden .calibration-panel {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .calibration-panel input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            margin-top: 4px;
+            width: 100%;
+        }
+
+        .calibration-panel input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            box-shadow: 0 0 6px var(--neon-blue);
+        }
+
+        .calibration-row label {
+            font-size: 0.65rem;
+            color: #7b7899;
+            text-transform: uppercase;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+        
+        .calibration-row label span {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Input de archivo oculto para carga manual sin restricciones de CORS -->
+    <input type="file" id="local-file-input" accept="image/*" style="display: none;">
+
+    <!-- 🌟 STROBE / WHITE OUT VJ LAYER 🌟 -->
+    <div id="strobe-layer" class="strobe-overlay"></div>
+
+    <!-- 🪙 INTRO / AUDIO CONCURRENCY PERMISSION OVERLAY 🪙 -->
+    <div id="intro-screen" class="intro-overlay">
+        <div class="logo-intro-box">
+            <div class="intro-title">ENZO FEST 2</div>
+            <div class="intro-subtitle">BIOMETRIC HOLOGRAM LIVE STAGE</div>
+        </div>
+        <button class="intro-btn" id="btn-start-visuals">
+            ACTIVATE SCANNER <i class="fa-solid fa-expand" style="margin-left: 10px;"></i>
+        </button>
+        <p style="color: #7b7899; font-size: 0.85rem; max-width: 400px; text-align: center; line-height: 1.6;">
+            Presiona el botón para proyectar el holograma del ultrasonido real de Enzo y sincronizarlo con el micrófono.
+        </p>
+        <button class="btn-mic-toggle" id="btn-select-file" style="margin-top: -10px; color: var(--neon-blue); border-color: var(--neon-blue); cursor: pointer; pointer-events: auto;">
+            <i class="fa-solid fa-file-image"></i> CARGAR ENZO5.JPEG (MANUAL / BYPASS CORS)
+        </button>
+    </div>
+
+    <!-- 💻 HUD CONTROLS & INFO LAYOUT 💻 -->
+    <div id="hud" class="hud-container">
+        
+        <!-- Left Calibration Panel (Ajustes de Nitidez en Vivo) -->
+        <div class="glass-panel calibration-panel" style="pointer-events: auto;">
+            <div class="sys-title" style="font-size: 0.65rem; color: var(--neon-pink); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); margin-bottom: 4px;">
+                <i class="fa-solid fa-sliders"></i> CALIBRATION CONSOLE
+            </div>
+            
+            <div class="calibration-row">
+                <label>Filtro Fondo (Negro): <span id="threshold-val">0</span></label>
+                <input type="range" id="slider-threshold" min="0" max="100" value="0">
+            </div>
+            
+            <div class="calibration-row">
+                <label>Contraste Facial: <span id="contrast-val">2.5</span></label>
+                <input type="range" id="slider-contrast" min="0.5" max="2.5" step="0.1" value="2.5">
+            </div>
+            
+            <div class="calibration-row">
+                <label>Brillo Rostro: <span id="brightness-val">0.7</span></label>
+                <input type="range" id="slider-brightness" min="0.5" max="2.5" step="0.1" value="0.7">
+            </div>
+            
+            <div class="calibration-row">
+                <label>Fuerza Bloom: <span id="bloom-slider-val">0.2</span></label>
+                <input type="range" id="slider-bloom" min="0.2" max="3.5" step="0.1" value="0.2">
+            </div>
+
+            <div class="calibration-row">
+                <label>Tinte Holograma: <span id="tint-val">100%</span></label>
+                <input type="range" id="slider-tint" min="0" max="100" value="100">
+            </div>
+            
+            <button id="btn-reset-calibration" style="font-size: 0.65rem; margin-top: 4px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-family: monospace;">
+                Restablecer Valores
+            </button>
+        </div>
+        
+        <!-- Header Info -->
+        <div class="hud-header">
+            <div class="glass-panel sys-info">
+                <div class="sys-title">
+                    <div class="pulse-dot"></div> HOLO_SCANNER_CORE.SYS
+                </div>
+                <div class="sys-subtitle" id="vj-mode-text">MODE: AUTO MIC</div>
+                <div class="sensitivity-slider-box">
+                    <i class="fa-solid fa-microphone-lines" style="color: #7b7899; font-size: 0.75rem;"></i>
+                    <input type="range" id="sensitivity-slider" min="1" max="10" step="0.5" value="5" title="Sensibilidad del Micrófono">
+                    <span id="sensitivity-val" style="font-size: 0.7rem; font-family: monospace; color: var(--neon-pink);">x5.0</span>
+                </div>
+                <button id="btn-select-file-hud" style="margin-top: 8px; font-size: 0.7rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: var(--neon-blue); padding: 5px 10px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; pointer-events: auto;">
+                    <i class="fa-solid fa-file-image"></i> Cargar enzo5.jpeg
+                </button>
+                <div id="vj-log-console" style="font-family: monospace; font-size: 0.62rem; color: #7b7899; max-height: 52px; width: 155px; overflow-y: auto; margin-top: 8px; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); text-align: left; line-height: 1.2;">
+                    &gt; Diagnóstico...
+                </div>
+            </div>
+
+            <div class="glass-panel telemetry-panel">
+                <div class="telemetry-row"><span>BPM:</span><span class="val" id="bpm-val">128.0</span></div>
+                <div class="telemetry-row"><span>BIOM_SCAN:</span><span class="val" id="scan-val" style="color: var(--neon-blue)">100% OK</span></div>
+                <div class="telemetry-row"><span>BLOOM:</span><span class="val" id="bloom-val">1.30</span></div>
+                <div class="telemetry-row"><span>LASERS:</span><span class="val" style="color: var(--neon-green)">READY</span></div>
+            </div>
+        </div>
+
+        <!-- Center Festival Titles -->
+        <div class="hud-center">
+            <h1 class="festival-marquee" id="main-title">Enzo Fest</h1>
+            <div class="sub-marquee" id="sub-title">CYBORG SCAN STAGE</div>
+        </div>
+
+        <!-- Footer Systems & Manual control logs -->
+        <div class="hud-footer">
+            <div class="glass-panel" style="pointer-events: auto;">
+                <div class="visualizer-hud-container" id="eq-hud">
+                    <!-- Dynamic bars created by script -->
+                </div>
+            </div>
+
+            <div class="glass-panel keyboard-controls-panel">
+                <p><strong>VJ LIVE CONTROLS:</strong></p>
+                <p><span>ESPACIO</span> Strobo Flash | <span>G</span> Hologram Glitch | <span>C</span> Color Theme</p>
+                <p><span>V</span> Zoom Camera | <span>M</span> Toggle Mic | <span>H</span> Hide HUD (Showcase)</p>
+            </div>
+        </div>
+
+        <!-- 🖼️ FOTO DE REFERENCIA 2D (OCULTABLE) 🖼️ -->
+        <div class="glass-panel reference-badge" id="ref-badge" style="display: none; pointer-events: auto; position: absolute; bottom: 2rem; left: 15rem; width: 140px; z-index: 15; text-align: center; padding: 8px;">
+            <div style="font-size: 0.55rem; color: #7b7899; font-family: monospace; text-transform: uppercase; margin-bottom: 4px;">Referencia 2D</div>
+            <img id="ref-img" src="" style="width: 100%; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); display: block; margin: 0 auto;">
+            <button id="btn-close-ref" style="font-size: 0.55rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 2px 6px; border-radius: 3px; cursor: pointer; margin-top: 6px; width: 100%;">Ocultar</button>
+        </div>
+
+    </div>
+
+    <!-- WebGL Canvas for 3D graphics -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- 🌐 TRES.JS E IMPORTS DE POST-PROCESAMIENTO DESDE CDN 🌐 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+    <!-- 🕹️ LÓGICA DE PROGRAMACIÓN DEL ENGINE 3D Y DE AUDIO 🕹️ -->
+    <script>
+        // --- CONSOLA DE DIAGNÓSTICO EN VIVO ---
+        function vjLog(msg, isError = false) {
+            console.log(msg);
+            const consoleEl = document.getElementById('vj-log-console');
+            if (consoleEl) {
+                const prefix = isError ? "❌ " : "⚙️ ";
+                const color = isError ? "#ff007f" : "#00f3ff";
+                consoleEl.innerHTML += `<div style="color: ${color}; margin-bottom: 2px;">${prefix}${msg}</div>`;
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        }
+
+        // --- VARIABLES GLOBALES ---
+        let scene, camera, renderer, composer;
+        let bloomPass;
+        let hologramPlane, holoMaterial, scanGrid, scanBar;
+        let gyroRing1, gyroRing2, gyroRing3;
+        let particleSystem;
+        let laserBeams = [];
+        let directionalLight1, directionalLight2, pointCenterLight;
+        
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let isAudioReactive = true;
+        let micStream = null;
+
+        // Configuración de Calibración de Imagen en Vivo
+        let originalUltrasoundImage = null;
+        let currentHoloSettings = {
+            threshold: 0,
+            contrast: 2.5,
+            brightness: 0.7,
+            bloom: 0.2,
+            tint: 1.0
+        };
+
+        // VJ Colors & Theme - Colores HDR de alta intensidad (valores > 1.0) para que brillen
+        // intensamente en la mezcla aditiva y activen el efecto de Bloom
+        let colorThemes = [
+            { cian: new THREE.Color(1.6, 1.1, 0.6), magenta: new THREE.Color(2.5, 0.2, 0.0), name: 'ULTRASOUND GOLD' }, // Hermoso oro/bronce original
+            { cian: new THREE.Color(0.0, 3.0, 3.0), magenta: new THREE.Color(3.0, 0.0, 1.5), name: 'CYBERPUNK' },
+            { cian: new THREE.Color(0.6, 3.0, 0.2), magenta: new THREE.Color(1.8, 0.0, 3.0), name: 'NEON FOREST' },
+            { cian: new THREE.Color(0.0, 3.0, 3.0), magenta: new THREE.Color(0.0, 0.6, 3.0), name: 'DEEP SPACE' }
+        ];
+        let currentThemeIndex = 0;
+
+        // Función para interpolar el tinte del holograma entre original y neón
+        window.updateHologramColor = function() {
+            if (!holoMaterial) return;
+            const theme = colorThemes[currentThemeIndex];
+            const tint = currentHoloSettings.tint; // 0.0 a 1.0
+            
+            const targetColor = new THREE.Color();
+            // Interpolar entre blanco/amarillo cálido y el color neón del tema
+            targetColor.lerpColors(new THREE.Color(1.2, 1.1, 0.9), theme.cian, tint);
+            
+            holoMaterial.color.copy(targetColor);
+            if (scanBar) {
+                scanBar.material.color.copy(theme.cian);
+            }
+        };
+        let manualBpm = 128.0;
+        let micSensitivity = 5.0;
+
+        // Shader Glitch & Reactivity States
+        let globalBass = 0;
+        let manualGlitchActive = 0.0;
+        let glitchTimer = 0;
+        let zoomAngle = 0; // 0: standard, 1: dramatic low-angle, 2: close-up scanner, 3: rotating
+        let cameraZoomTarget = 9.5;
+        let targetBloomStrength = 0.2;
+
+        // --- INICIALIZACIÓN GLOBAL ---
+        function createEqualizerBars() {
+            const eqContainer = document.getElementById('eq-hud');
+            if (eqContainer) {
+                eqContainer.innerHTML = '';
+                for (let i = 0; i < 20; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'eq-bar';
+                    bar.id = `eq-bar-${i}`;
+                    eqContainer.appendChild(bar);
+                }
+            }
+        }
+
+        function startShowFlow() {
+            if (audioContext) return; // Evitar inicializar doble
+            createEqualizerBars(); // Crear barras síncronas antes de que empiece el bucle de animación
+            initAudio();
+            document.getElementById('intro-screen').classList.add('hidden');
+            initWebGL();
+            animate();
+        }
+
+        document.getElementById('btn-start-visuals').addEventListener('click', startShowFlow);
+
+        // --- CONEXIÓN GLOBAL DE CONTROLES DE ARCHIVO MANUAL (BYPASS CORS ACTIVO DESDE EL INICIO) ---
+        const fileInput = document.getElementById('local-file-input');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Si el show no ha comenzado, iniciarlo automáticamente con la interacción del usuario
+                    startShowFlow();
+                    
+                    // Esperar un frame pequeño para asegurar que Three.js y window.loadUltrasoundTexture estén listos
+                    setTimeout(() => {
+                        if (window.loadUltrasoundTexture) {
+                            window.loadUltrasoundTexture(event.target.result, true);
+                        }
+                    }, 80);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('btn-select-file').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        document.getElementById('btn-select-file-hud').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Configuración de sensibilidad
+        const sensitivitySlider = document.getElementById('sensitivity-slider');
+        const sensitivityVal = document.getElementById('sensitivity-val');
+        sensitivitySlider.addEventListener('input', (e) => {
+            micSensitivity = parseFloat(e.target.value);
+            sensitivityVal.textContent = `x${micSensitivity.toFixed(1)}`;
+        });
+
+        // --- SISTEMA DE AUDIO (WEB AUDIO API) ---
+        async function initAudio() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextClass();
+                
+                const constraints = { audio: true, video: false };
+                micStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                const source = audioContext.createMediaStreamSource(micStream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                source.connect(analyser);
+                document.getElementById('vj-mode-text').innerHTML = `MODE: LIVE MIC <i class="fa-solid fa-microphone" style="color: var(--neon-pink); margin-left: 5px;"></i>`;
+            } catch (err) {
+                console.warn("No se pudo conectar el micrófono. Iniciando en modo manual.", err);
+                isAudioReactive = false;
+                document.getElementById('vj-mode-text').innerHTML = `MODE: MANUAL DJ <i class="fa-solid fa-keyboard" style="color: var(--neon-pink); margin-left: 5px;"></i>`;
+            }
+            
+            // Generar barras dinámicas del ecualizador (ya creadas síncronamente en startShowFlow)
+            createEqualizerBars();
+        }
+
+        // --- ENGINE WEBGL (THREE.JS + NATIVE HOLO BLENDING) ---
+        function initWebGL() {
+            const canvas = document.getElementById('webgl-canvas');
+            
+            // Escena
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x010103, 0.02);
+
+            // Cámara
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, cameraZoomTarget);
+
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ReinhardToneMapping;
+
+            // Crear textura placeholder de 2x2 naranja para evitar errores de sampler2D vacío en frames iniciales
+            const placeholderCanvas = document.createElement('canvas');
+            placeholderCanvas.width = 2;
+            placeholderCanvas.height = 2;
+            const pCtx = placeholderCanvas.getContext('2d');
+            pCtx.fillStyle = '#ff8800';
+            pCtx.fillRect(0, 0, 2, 2);
+            const placeholderTexture = new THREE.CanvasTexture(placeholderCanvas);
+            placeholderTexture.needsUpdate = true;
+
+            // --- MATERIAL NATIVO ULTRA-COMPATIBLE CON TINTA DE NEÓN ---
+            // Usamos Additive Blending para que los píxeles negros del ultrasonido sean 100% transparentes automáticamente,
+            // garantizando soporte universal sin fallos de compilación de shader.
+            holoMaterial = new THREE.MeshBasicMaterial({
+                map: placeholderTexture,
+                transparent: true,
+                opacity: 0.95,
+                blending: THREE.AdditiveBlending,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+                color: colorThemes[currentThemeIndex].cian
+            });
+
+            // Geometría del Holograma (4:3 aspect ratio para el ultrasonido enzo5.jpeg)
+            const planeGeo = new THREE.PlaneGeometry(6.4, 4.8);
+            hologramPlane = new THREE.Mesh(planeGeo, holoMaterial);
+            hologramPlane.position.y = 0.5;
+            scene.add(hologramPlane);
+
+            // --- BARRA FÍSICA DE ESCANEO HOLOGRÁFICO 3D ---
+            // Una barra de neón flotante en 3D que sube y baja en frente de la cara de Enzo
+            const scanBarGeo = new THREE.BoxGeometry(6.5, 0.08, 0.08);
+            const scanBarMat = new THREE.MeshBasicMaterial({
+                color: colorThemes[currentThemeIndex].cian,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending
+            });
+            scanBar = new THREE.Mesh(scanBarGeo, scanBarMat);
+            scanBar.position.z = 0.06; // Ligeramente por delante
+            hologramPlane.add(scanBar);
+
+            // --- PROCESADOR DE PÍXELES DE ULTRASONIDO EN VIVO ---
+            window.processAndUploadTexture = function() {
+                if (!originalUltrasoundImage) return;
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = originalUltrasoundImage.width || 1024;
+                canvas.height = originalUltrasoundImage.height || 768;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(originalUltrasoundImage, 0, 0);
+                
+                let processedCorrectly = false;
+                
+                try {
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imgData.data;
+                    
+                    const threshold = currentHoloSettings.threshold;
+                    const contrast = currentHoloSettings.contrast;
+                    const brightness = currentHoloSettings.brightness;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        let r = data[i];
+                        let g = data[i+1];
+                        let b = data[i+2];
+                        
+                        // Luminancia del píxel para umbral de negro
+                        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+                        
+                        if (luminance < threshold) {
+                            data[i] = 0;
+                            data[i+1] = 0;
+                            data[i+2] = 0;
+                        } else {
+                            // Brillo
+                            r = r * brightness;
+                            g = g * brightness;
+                            b = b * brightness;
+                            
+                            // Contraste lineal simple y correcto (evita inyecciones de contraste negativo)
+                            r = (r - 128) * contrast + 128;
+                            g = (g - 128) * contrast + 128;
+                            b = (b - 128) * contrast + 128;
+                            
+                            data[i] = Math.max(0, Math.min(255, r));
+                            data[i+1] = Math.max(0, Math.min(255, g));
+                            data[i+2] = Math.max(0, Math.min(255, b));
+                        }
+                    }
+                    
+                    ctx.putImageData(imgData, 0, 0);
+                    processedCorrectly = true;
+                } catch (e) {
+                    console.warn("Filtros en vivo omitidos por restricciones de CORS locales (file://). Proyectando imagen original de Enzo sin procesar.", e);
+                    vjLog("Filtros VJ en vivo omitidos por CORS. Carga el archivo manualmente para calibrarlo.", false);
+                    // Dejamos la imagen original en el canvas tal cual, sin tirar error
+                }
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter;
+                texture.needsUpdate = true;
+                
+                if (holoMaterial) {
+                    holoMaterial.map = texture;
+                    holoMaterial.needsUpdate = true;
+                }
+                if (hologramPlane) {
+                    hologramPlane.material.map = texture;
+                    hologramPlane.material.needsUpdate = true;
+                }
+            };
+
+            // --- FUNCIÓN DE CARGA COMPLETA DE TEXTURA (CORS-SAFE & MANUAL BYPASS) ---
+            window.loadUltrasoundTexture = function(url, isBase64 = false) {
+                // Detectar ejecución local file:// para evitar tintentar canvas con imágenes locales (WebGL lo bloquea)
+                if (!isBase64 && window.location.protocol === 'file:') {
+                    vjLog("Ejecución local file:// detectada. CORS restringe texturas relativas.", false);
+                    vjLog("Cargando Escáner Biométrico de Respaldo...", false);
+                    vjLog("👉 Haz clic en 'Cargar enzo5.jpeg' para proyectar el ultrasonido.", false);
+                    drawBiometricFallback();
+                    return;
+                }
+
+                vjLog("Iniciando carga de textura...");
+                
+                if (isBase64) {
+                    vjLog("Cargando Base64 (Bypass CORS activo)");
+                    
+                    const img = new Image();
+                    img.onload = function() {
+                        vjLog("Base64 cargada en Image. Guardando referencia...");
+                        originalUltrasoundImage = img;
+                        window.processAndUploadTexture();
+                        
+                        // Mostrar Badge de Referencia 2D
+                        const refBadge = document.getElementById('ref-badge');
+                        const refImg = document.getElementById('ref-img');
+                        if (refBadge && refImg) {
+                            refImg.src = url;
+                            refBadge.style.display = 'block';
+                        }
+                        
+                        document.getElementById('scan-val').textContent = "ONLINE (B64)";
+                        document.getElementById('scan-val').style.color = "var(--neon-green)";
+                        vjLog("¡Holograma de Enzo proyectado!", false);
+                    };
+                    img.onerror = function(err) {
+                        vjLog("Error cargando Base64 en Image.", true);
+                        drawBiometricFallback();
+                    };
+                    img.src = url;
+                } else {
+                    vjLog("Cargando relative: enzo5.jpeg");
+                    const loader = new THREE.TextureLoader();
+                    loader.setCrossOrigin('');
+                    
+                    loader.load(
+                        url,
+                        function(texture) {
+                            vjLog("enzo5.jpeg cargada vía TextureLoader.");
+                            originalUltrasoundImage = texture.image;
+                            window.processAndUploadTexture();
+                            
+                            document.getElementById('scan-val').textContent = "ONLINE";
+                            document.getElementById('scan-val').style.color = "var(--neon-green)";
+                            vjLog("¡Holograma de Enzo proyectado!", false);
+                        },
+                        undefined,
+                        function(err) {
+                            vjLog("TextureLoader bloqueado/falló. Usando Image...", true);
+                            
+                            const img = new Image();
+                            if (window.location.protocol !== 'file:') {
+                                img.crossOrigin = "anonymous";
+                            }
+                            
+                            img.onload = function() {
+                                vjLog("Image cargada. Guardando referencia...");
+                                originalUltrasoundImage = img;
+                                window.processAndUploadTexture();
+                                
+                                document.getElementById('scan-val').textContent = "ONLINE (IMG)";
+                                document.getElementById('scan-val').style.color = "var(--neon-green)";
+                                vjLog("¡Holograma de Enzo proyectado!", false);
+                            };
+                            img.onerror = function() {
+                                vjLog("Carga local bloqueada por CORS del navegador.", true);
+                                vjLog("Selecciona la imagen manualmente usando el botón", false);
+                                drawBiometricFallback();
+                            };
+                            img.src = url;
+                        }
+                    );
+                }
+            };
+
+            function drawBiometricFallback() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = '#050510';
+                ctx.fillRect(0,0,512,512);
+                ctx.strokeStyle = '#00f3ff';
+                ctx.lineWidth = 3;
+                
+                // Círculos concéntricos cibernéticos de escaneo
+                ctx.beginPath(); ctx.arc(256, 256, 150, 0, Math.PI*2); ctx.stroke();
+                ctx.strokeStyle = '#ff007f';
+                ctx.beginPath(); ctx.arc(256, 256, 80, 0, Math.PI*2); ctx.stroke();
+                ctx.strokeRect(100, 100, 312, 312);
+                
+                // Líneas HUD
+                ctx.strokeStyle = '#39ff14';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, 256); ctx.lineTo(512, 256);
+                ctx.moveTo(256, 0); ctx.lineTo(256, 512);
+                ctx.stroke();
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.needsUpdate = true;
+                holoMaterial.map = texture;
+                holoMaterial.needsUpdate = true;
+                
+                document.getElementById('scan-val').textContent = "EMU_BIOMETRIC";
+                document.getElementById('scan-val').style.color = "var(--neon-purple)";
+            }
+
+            // Iniciar carga automática de la imagen de ultrasonido
+            window.loadUltrasoundTexture('enzo5.jpeg');
+
+            // Los controles del archivo manual ya han sido enlazados globalmente al cargar la página
+
+            // --- CUNA DE ESCANEO GIROSCÓPICA NEÓN ---
+            const ringGeo = new THREE.TorusGeometry(4.6, 0.05, 10, 64);
+            
+            const ringMat1 = new THREE.MeshStandardMaterial({
+                color: colorThemes[currentThemeIndex].cian,
+                emissive: colorThemes[currentThemeIndex].cian,
+                emissiveIntensity: 1.5,
+                metalness: 1.0,
+                roughness: 0.1
+            });
+            gyroRing1 = new THREE.Mesh(ringGeo, ringMat1);
+            scene.add(gyroRing1);
+
+            const ringMat2 = new THREE.MeshStandardMaterial({
+                color: colorThemes[currentThemeIndex].magenta,
+                emissive: colorThemes[currentThemeIndex].magenta,
+                emissiveIntensity: 1.5,
+                metalness: 1.0,
+                roughness: 0.1
+            });
+            gyroRing2 = new THREE.Mesh(ringGeo, ringMat2);
+            gyroRing2.rotation.x = Math.PI / 2;
+            scene.add(gyroRing2);
+
+            const ringMat3 = new THREE.MeshStandardMaterial({
+                color: 0x9d4edd,
+                emissive: 0x9d4edd,
+                emissiveIntensity: 1.0,
+                metalness: 1.0,
+                roughness: 0.1
+            });
+            gyroRing3 = new THREE.Mesh(ringGeo, ringMat3);
+            gyroRing3.rotation.y = Math.PI / 4;
+            scene.add(gyroRing3);
+
+            // Nodos brillantes en las esquinas de la imagen holográfica
+            const nodeGeo = new THREE.SphereGeometry(0.12, 16, 16);
+            const nodeMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+            const cornerPositions = [
+                [-3.2, -1.9, 0], [3.2, -1.9, 0],
+                [-3.2, 2.9, 0], [3.2, 2.9, 0]
+            ];
+            cornerPositions.forEach(p => {
+                const node = new THREE.Mesh(nodeGeo, nodeMat);
+                node.position.set(p[0], p[1], p[2]);
+                hologramPlane.add(node); // Conectar a la placa del holograma
+            });
+
+            // --- SUELO DE REJILLA DIGITAL 3D (SYNTHWAVE GRID) ---
+            // Un grid flotante horizontal
+            scanGrid = new THREE.GridHelper(40, 40, 0x00f3ff, 0x111633);
+            scanGrid.position.y = -3.2;
+            scene.add(scanGrid);
+
+            // --- LÁSERES VOLUMÉTRICOS LINEALES EN EL FONDO ---
+            const laserMat = new THREE.MeshBasicMaterial({
+                color: colorThemes[currentThemeIndex].magenta,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            const laserGeo = new THREE.CylinderGeometry(0.015, 0.04, 30, 8);
+            
+            for (let i = 0; i < 6; i++) {
+                const beam = new THREE.Mesh(laserGeo, laserMat.clone());
+                beam.position.set((i - 2.5) * 5, 0, -8);
+                beam.rotation.z = (Math.random() - 0.5) * 0.6;
+                scene.add(beam);
+                laserBeams.push(beam);
+            }
+
+            // --- NEBULA DE PARTÍCULAS (ACELERADOR DE ANILLO) ---
+            const particleCount = 1500;
+            const particleGeo = new THREE.BufferGeometry();
+            const pPositions = new Float32Array(particleCount * 3);
+            const pColors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                // Orbitando alrededor del holograma en forma de cinturón toroidal
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 4.8 + Math.random() * 3.5;
+                const depth = (Math.random() - 0.5) * 6;
+                pPositions[i] = Math.cos(angle) * radius;
+                pPositions[i + 1] = Math.sin(angle) * radius;
+                pPositions[i + 2] = depth;
+
+                // Alternar colores
+                const theme = colorThemes[currentThemeIndex];
+                const isCyan = Math.random() > 0.5;
+                const c = isCyan ? theme.cian : theme.magenta;
+                pColors[i] = c.r;
+                pColors[i + 1] = c.g;
+                pColors[i + 2] = c.b;
+            }
+
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+            particleGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.15,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            particleSystem = new THREE.Points(particleGeo, particleMat);
+            scene.add(particleSystem);
+
+            // --- LUCES ---
+            directionalLight1 = new THREE.DirectionalLight(0xff8800, 2.0);
+            directionalLight1.position.set(-6, 4, 5);
+            scene.add(directionalLight1);
+
+            directionalLight2 = new THREE.DirectionalLight(0xff2200, 2.0);
+            directionalLight2.position.set(6, -4, 5);
+            scene.add(directionalLight2);
+
+            pointCenterLight = new THREE.PointLight(0xff2200, 2.0, 15);
+            pointCenterLight.position.set(0, 0.5, -1);
+            scene.add(pointCenterLight);
+
+            // --- CAPA DE POST-PROCESAMIENTO (BLOOM DE NEÓN) ---
+            const renderPass = new THREE.RenderPass(scene, camera);
+            bloomPass = new THREE.UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                targetBloomStrength, // Brillo
+                0.75, // Radio
+                0.12 // Threshold
+            );
+
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderPass);
+            composer.addPass(bloomPass);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            bloomPass.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- CONTROLES LIVE VJ POR TECLADO ---
+        window.addEventListener('keydown', (e) => {
+            // Strobo flash de drop (Espacio)
+            if (e.code === 'Space') {
+                triggerStrobe();
+            }
+
+            // Glitch horizontal de holograma (Tecla G)
+            if (e.code === 'KeyG') {
+                triggerGlitch();
+            }
+
+            // Cambiar colores del holograma y láseres (Tecla C)
+            if (e.code === 'KeyC') {
+                switchColorTheme();
+            }
+
+            // Cambiar nivel de zoom de cámara (Tecla V)
+            if (e.code === 'KeyV') {
+                switchCameraAngle();
+            }
+
+            // Encender / Apagar Micrófono (Tecla M)
+            if (e.code === 'KeyM') {
+                isAudioReactive = !isAudioReactive;
+                const modeText = document.getElementById('vj-mode-text');
+                if (isAudioReactive && analyser) {
+                    modeText.innerHTML = `MODE: LIVE MIC <i class="fa-solid fa-microphone" style="color: var(--neon-green); margin-left: 5px;"></i>`;
+                } else {
+                    modeText.innerHTML = `MODE: MANUAL DJ <i class="fa-solid fa-keyboard" style="color: var(--neon-pink); margin-left: 5px;"></i>`;
+                }
+            }
+
+            // Mostrar / Ocultar HUD (Tecla H)
+            if (e.code === 'KeyH') {
+                document.getElementById('hud').classList.toggle('hidden');
+            }
+        });
+
+        function triggerStrobe() {
+            const strobe = document.getElementById('strobe-layer');
+            strobe.classList.add('active');
+            targetBloomStrength = 4.8;
+            hologramPlane.scale.set(1.3, 1.3, 1.3);
+
+            setTimeout(() => {
+                strobe.classList.remove('active');
+                targetBloomStrength = currentHoloSettings.bloom;
+            }, 85);
+        }
+
+        function triggerGlitch() {
+            glitchTimer = 22; // Duración de interferencia en frames
+            document.getElementById('main-title').classList.add('glitch-text');
+            document.getElementById('sub-title').classList.add('glitch-text');
+            
+            setTimeout(() => {
+                document.getElementById('main-title').classList.remove('glitch-text');
+                document.getElementById('sub-title').classList.remove('glitch-text');
+            }, 500);
+        }
+
+        function switchColorTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % colorThemes.length;
+            const theme = colorThemes[currentThemeIndex];
+
+            // Colorear el holograma y la barra física 3D con el tono del tema activo
+            if (window.updateHologramColor) {
+                window.updateHologramColor();
+            } else {
+                if (holoMaterial) holoMaterial.color.copy(theme.cian);
+                if (scanBar) scanBar.material.color.copy(theme.cian);
+            }
+
+            // Actualizar luces del motor
+            directionalLight1.color.copy(theme.cian);
+            directionalLight2.color.copy(theme.magenta);
+            pointCenterLight.color.copy(theme.magenta);
+
+            // Actualizar anillos giroscópicos
+            gyroRing1.material.color.copy(theme.cian);
+            gyroRing1.material.emissive.copy(theme.cian);
+            gyroRing2.material.color.copy(theme.magenta);
+            gyroRing2.material.emissive.copy(theme.magenta);
+
+            // Actualizar láseres
+            laserBeams.forEach(beam => {
+                beam.material.color.copy(theme.magenta);
+            });
+
+            // Actualizar partículas
+            const colors = particleSystem.geometry.attributes.color.array;
+            for (let i = 0; i < colors.length; i += 3) {
+                const isCyan = Math.random() > 0.5;
+                const c = isCyan ? theme.cian : theme.magenta;
+                colors[i] = c.r;
+                colors[i + 1] = c.g;
+                colors[i + 2] = c.b;
+            }
+            particleSystem.geometry.attributes.color.needsUpdate = true;
+
+            console.log(`Paleta VJ cambiada a: ${theme.name}`);
+        }
+
+        function switchCameraAngle() {
+            zoomAngle = (zoomAngle + 1) % 4;
+            
+            if (zoomAngle === 0) {
+                cameraZoomTarget = 9.5; // Vista normal
+                camera.position.set(0, 0, cameraZoomTarget);
+                camera.lookAt(0, 0.5, 0);
+            } else if (zoomAngle === 1) {
+                cameraZoomTarget = 6.2; // Zoom escáner
+                camera.position.set(0, 0.5, cameraZoomTarget);
+                camera.lookAt(0, 0.5, 0);
+            } else if (zoomAngle === 2) {
+                cameraZoomTarget = 8.5; // Paneo lateral fijo
+                camera.position.set(-4, 2, 8);
+                camera.lookAt(0, 0.5, 0);
+            }
+            // El ángulo 3 (rotatorio dinámico) se maneja en el loop
+        }
+
+        // --- BUCLE RENDERIZADO (RENDER LOOP) ---
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // --- 1. PROCESAR ANALIZADOR DE MICRO EN VIVO ---
+            let bassNormalized = 0;
+            let midNormalized = 0;
+            let trebleNormalized = 0;
+
+            if (isAudioReactive && analyser && dataArray) {
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Bajo (Bass 20-150Hz)
+                let bassSum = 0;
+                for (let i = 0; i < 8; i++) bassSum += dataArray[i];
+                bassNormalized = (bassSum / 8) / 255;
+
+                // Medios (Mid 150-600Hz)
+                let midSum = 0;
+                for (let i = 8; i < 32; i++) midSum += dataArray[i];
+                midNormalized = (midSum / 24) / 255;
+
+                // Agudos (Treble 600-2000Hz)
+                let trebleSum = 0;
+                for (let i = 32; i < 80; i++) trebleSum += dataArray[i];
+                trebleNormalized = (trebleSum / 48) / 255;
+
+                // Aplicar slider de sensibilidad
+                bassNormalized = Math.min(1.0, bassNormalized * (micSensitivity / 5));
+                midNormalized = Math.min(1.0, midNormalized * (micSensitivity / 5));
+                trebleNormalized = Math.min(1.0, trebleNormalized * (micSensitivity / 5));
+
+                // Dibujar el ecualizador del HUD
+                for (let i = 0; i < 20; i++) {
+                    const rawVal = dataArray[Math.floor(i * (dataArray.length / 20))];
+                    const heightPercent = Math.max(5, (rawVal / 255) * 100);
+                    const barEl = document.getElementById(`eq-bar-${i}`);
+                    if (barEl) barEl.style.height = `${heightPercent}%`;
+                }
+
+                // Cálculo virtual de BPM
+                if (bassNormalized > 0.78) {
+                    manualBpm = 120 + Math.floor(bassNormalized * 15);
+                    document.getElementById('bpm-val').textContent = manualBpm.toFixed(1);
+                }
+            } else {
+                // Modo simulación de metrónomo a 128 BPM
+                const bpmInterval = (60 / 128) * 1000;
+                const fakeBeat = (Date.now() % bpmInterval) / bpmInterval;
+                
+                bassNormalized = Math.pow(Math.max(0, 1.0 - fakeBeat * 4.0), 3.0);
+                midNormalized = 0.2 + 0.15 * Math.sin(time * 2);
+                trebleNormalized = 0.1 + 0.2 * Math.cos(time * 4);
+
+                // Dibujar ondas en el ecualizador del HUD
+                for (let i = 0; i < 20; i++) {
+                    const fakeVal = 10 + 65 * Math.sin(time * 3 + i * 0.45) * Math.cos(time);
+                    const barEl = document.getElementById(`eq-bar-${i}`);
+                    if (barEl) barEl.style.height = `${Math.max(5, Math.abs(fakeVal))}%`;
+                }
+                document.getElementById('bpm-val').textContent = "128.0";
+            }
+
+            globalBass = bassNormalized;
+
+            // --- 2. ANIMAR LA BARRA FÍSICA DE ESCANEO 3D ---
+            if (scanBar) {
+                // Hacer que la barra suba y baje cruzando el plano
+                scanBar.position.y = Math.sin(time * 3.0) * 2.2;
+                // Latir opacidad con la música
+                scanBar.material.opacity = 0.5 + trebleNormalized * 0.5;
+            }
+
+            // Administrar Glitch físico
+            if (glitchTimer > 0) {
+                glitchTimer--;
+                // Glitch de posición del holograma (desplazamientos 3D rápidos)
+                hologramPlane.position.x = (Math.random() - 0.5) * 0.35;
+                hologramPlane.position.y = 0.5 + (Math.random() - 0.5) * 0.35;
+                hologramPlane.material.color.setHex(0xff00ff); // Flash color glitch magenta
+                
+                // Distorsión del HUD de la cámara
+                camera.position.x += (Math.random() - 0.5) * 1.8;
+                camera.position.y += (Math.random() - 0.5) * 1.8;
+                
+                bloomPass.strength = 4.0;
+                const bloomEl = document.getElementById('bloom-val');
+                if (bloomEl) bloomEl.textContent = "4.00";
+            } else {
+                hologramPlane.position.set(0, 0.5, 0);
+                if (hologramPlane.material) {
+                    hologramPlane.material.color.copy(colorThemes[currentThemeIndex].cian); // Restaurar
+                }
+                
+                // Bloom latiente con los bajos
+                const currentBloom = targetBloomStrength + (bassNormalized * 1.4);
+                bloomPass.strength = currentBloom;
+                const bloomEl = document.getElementById('bloom-val');
+                if (bloomEl) bloomEl.textContent = currentBloom.toFixed(2);
+            }
+
+            // --- 3. MOVER GEOMETRÍA 3D (CUNA GIROSCÓPICA) ---
+            
+            // Rotaciones independientes de los anillos cibernéticos
+            gyroRing1.rotation.y = time * 0.45 + (midNormalized * 0.1);
+            gyroRing1.rotation.x = time * 0.1;
+            
+            gyroRing2.rotation.x = -time * 0.35 - (bassNormalized * 0.15);
+            gyroRing2.rotation.z = time * 0.2;
+            
+            gyroRing3.rotation.z = time * 0.25;
+            gyroRing3.rotation.y = -time * 0.15;
+
+            // Latido de tamaño de los anillos con el bajo
+            const ringScale = 1.0 + (bassNormalized * 0.08);
+            gyroRing1.scale.set(ringScale, ringScale, ringScale);
+            gyroRing2.scale.set(ringScale, ringScale, ringScale);
+            gyroRing3.scale.set(ringScale, ringScale, ringScale);
+
+            // Latido del holograma de Enzo
+            const planeScale = 1.0 + (bassNormalized * 0.07);
+            hologramPlane.scale.set(planeScale, planeScale, 1.0);
+
+            // Mover rejilla digital horizontal (synthwave moving floor)
+            scanGrid.position.z = (time * 8.0) % 2.0;
+
+            // --- 4. RENDERIZAR LÁSERES VOLUMÉTRICOS ---
+            laserBeams.forEach((beam, idx) => {
+                // Oscilación de ángulo
+                beam.rotation.z = Math.sin(time * 0.8 + idx) * 0.45;
+                
+                // Brillo del láser se activa con los agudos/medios de la música
+                const scaleY = 1.0 + (trebleNormalized * 2.0);
+                beam.scale.set(1.0, scaleY, 1.0);
+                beam.material.opacity = 0.3 + (trebleNormalized * 0.7);
+            });
+
+            // --- 5. MOVER PARTÍCULAS CÓSMICAS (VÓRTICE) ---
+            particleSystem.rotation.z = -time * 0.08;
+            particleSystem.rotation.y = Math.sin(time * 0.1) * 0.2;
+
+            // --- 6. ANIMAR CÁMARA VJ ---
+            if (zoomAngle === 3) {
+                // Cámara flotante circular
+                camera.position.x = Math.sin(time * 0.2) * 9.5;
+                camera.position.z = Math.cos(time * 0.2) * 9.5;
+                camera.position.y = 0.5 + Math.sin(time * 0.4) * 2;
+                camera.lookAt(0, 0.5, 0);
+            } else {
+                // Retorno suave del zoom manual
+                camera.position.z += (cameraZoomTarget - camera.position.z) * 0.1;
+            }
+
+            // Luz central palmitante con el sonido
+            pointCenterLight.intensity = 1.0 + (bassNormalized * 5.0);
+
+            composer.render();
+        }
+
+        // --- VINCULACIÓN DE SLIDERS DE CALIBRACIÓN EN VIVO ---
+        const sliderThreshold = document.getElementById('slider-threshold');
+        const sliderContrast = document.getElementById('slider-contrast');
+        const sliderBrightness = document.getElementById('slider-brightness');
+        const sliderBloom = document.getElementById('slider-bloom');
+        const sliderTint = document.getElementById('slider-tint');
+        
+        const valThreshold = document.getElementById('threshold-val');
+        const valContrast = document.getElementById('contrast-val');
+        const valBrightness = document.getElementById('brightness-val');
+        const valBloom = document.getElementById('bloom-slider-val');
+        const valTint = document.getElementById('tint-val');
+        
+        if (sliderThreshold) {
+            sliderThreshold.addEventListener('input', (e) => {
+                currentHoloSettings.threshold = parseInt(e.target.value);
+                valThreshold.textContent = currentHoloSettings.threshold;
+                if (window.processAndUploadTexture) window.processAndUploadTexture();
+            });
+        }
+        
+        if (sliderContrast) {
+            sliderContrast.addEventListener('input', (e) => {
+                currentHoloSettings.contrast = parseFloat(e.target.value);
+                valContrast.textContent = currentHoloSettings.contrast.toFixed(1);
+                if (window.processAndUploadTexture) window.processAndUploadTexture();
+            });
+        }
+        
+        if (sliderBrightness) {
+            sliderBrightness.addEventListener('input', (e) => {
+                currentHoloSettings.brightness = parseFloat(e.target.value);
+                valBrightness.textContent = currentHoloSettings.brightness.toFixed(1);
+                if (window.processAndUploadTexture) window.processAndUploadTexture();
+            });
+        }
+        
+        if (sliderBloom) {
+            sliderBloom.addEventListener('input', (e) => {
+                currentHoloSettings.bloom = parseFloat(e.target.value);
+                targetBloomStrength = currentHoloSettings.bloom;
+                valBloom.textContent = currentHoloSettings.bloom.toFixed(1);
+            });
+        }
+
+        if (sliderTint) {
+            sliderTint.addEventListener('input', (e) => {
+                currentHoloSettings.tint = parseFloat(e.target.value) / 100;
+                valTint.textContent = e.target.value + "%";
+                if (window.updateHologramColor) window.updateHologramColor();
+            });
+        }
+        
+        const btnReset = document.getElementById('btn-reset-calibration');
+        if (btnReset) {
+            btnReset.addEventListener('click', () => {
+                currentHoloSettings = {
+                    threshold: 0,
+                    contrast: 2.5,
+                    brightness: 0.7,
+                    bloom: 0.2,
+                    tint: 1.0
+                };
+                
+                if (sliderThreshold) sliderThreshold.value = 0;
+                if (valThreshold) valThreshold.textContent = "0";
+                
+                if (sliderContrast) sliderContrast.value = 2.5;
+                if (valContrast) valContrast.textContent = "2.5";
+                
+                if (sliderBrightness) sliderBrightness.value = 0.7;
+                if (valBrightness) valBrightness.textContent = "0.7";
+                
+                if (sliderBloom) sliderBloom.value = 0.2;
+                if (valBloom) valBloom.textContent = "0.2";
+                targetBloomStrength = 0.2;
+
+                if (sliderTint) sliderTint.value = 100;
+                if (valTint) valTint.textContent = "100%";
+                
+                if (window.processAndUploadTexture) window.processAndUploadTexture();
+                if (window.updateHologramColor) window.updateHologramColor();
+            });
+        }
+
+        // Vincular botón de cierre del badge de referencia
+        const btnCloseRef = document.getElementById('btn-close-ref');
+        if (btnCloseRef) {
+            btnCloseRef.addEventListener('click', () => {
+                const refBadge = document.getElementById('ref-badge');
+                if (refBadge) refBadge.style.display = 'none';
+            });
+        }
+
+        console.log("Enzo's Biometric Visual Engine v2 online with Live Calibration.");
+    </script>
+</body>
+</html>
